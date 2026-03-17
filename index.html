@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>顧客満足度入力フォーム</title>
+  <title>顧客満足度入力フォーム (NC-CSAT)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
@@ -25,11 +25,11 @@
     <ul id="validation-errors"></ul>
   </div>
 
-  <!-- ========== 1. 基本情報 ========== -->
+  <!-- ========== 1. Basic Information ========== -->
   <section class="card" aria-labelledby="section-basic">
     <div class="card-header">
       <span class="icon">📌</span>
-      <span id="section-basic">基本情報</span>
+      <span id="section-basic">Basic Information</span>
     </div>
     <div class="card-body">
       <div class="form-grid">
@@ -60,28 +60,48 @@
         </div>
 
         <div class="form-group" style="grid-column: 1 / -1;">
-          <label for="serviceCenter">サービスセンター <span style="color:var(--accent)">*</span></label>
-          <input type="text" id="serviceCenter" placeholder="例：東京SC" aria-required="true">
-          <span class="error-msg">サービスセンターを入力してください</span>
+          <label for="serviceCenter">Service Center <span style="color:var(--accent)">*</span></label>
+          <select id="serviceCenter" aria-required="true">
+            <option value="">-- 選択してください --</option>
+            <option>MEAU</option>
+            <option>MEU</option>
+            <option>MEACH</option>
+            <option>ME-TWN</option>
+            <option>MEAK</option>
+            <option>MEAP</option>
+            <option>MEI</option>
+            <option>MEB</option>
+            <option>NC3G</option>
+            <option>本NC営(新潟NC)</option>
+            <option>中部支(ヤマザキ)</option>
+            <option>中部支NC</option>
+            <option>陸NC</option>
+            <option>西支NC</option>
+          </select>
+          <span class="error-msg">Service Center を選択してください</span>
         </div>
 
       </div>
     </div>
   </section>
 
-  <!-- ========== 2. 総合評価 ========== -->
+  <!-- ========== 2. Overall Evaluation ========== -->
   <section class="card" aria-labelledby="section-eval">
     <div class="card-header">
       <span class="icon">⭐</span>
-      <span id="section-eval">総合評価（1〜5 点）</span>
+      <span id="section-eval">Overall Evaluation</span>
     </div>
     <div class="card-body" style="padding:0;">
+      <p style="padding:12px 18px 4px;font-size:13px;color:var(--muted);">
+        ①～⑦の総合評価を入力してください。5点以外の項目については、下段に根拠案件の登録が必要です。
+      </p>
       <table class="eval-table" aria-label="総合評価入力テーブル">
         <thead>
           <tr>
-            <th style="width:25%">評価項目</th>
-            <th style="width:35%">スコア&nbsp;<span style="font-weight:400;color:var(--muted)">(1=低い ／ 5=高い)</span></th>
-            <th style="width:40%">根拠案件</th>
+            <th style="width:5%">No</th>
+            <th style="width:22%">評価項目</th>
+            <th style="width:28%">スコア&nbsp;<span style="font-weight:400;color:var(--muted)">(1=低い ／ 5=高い)</span></th>
+            <th style="width:45%">根拠案件</th>
           </tr>
         </thead>
         <tbody id="eval-tbody">
@@ -91,20 +111,108 @@
     </div>
   </section>
 
-  <!-- ========== 3. 案件登録 ========== -->
+  <!-- ========== 3. Case Registration / Case List ========== -->
   <section class="card" aria-labelledby="section-cases">
-    <div class="card-header" style="justify-content:space-between;">
-      <span>
-        <span class="icon">📁</span>
-        <span id="section-cases">案件登録</span>
-      </span>
-      <button class="btn btn-outline" id="btn-add-case" style="background:#fff;">
-        ＋ 案件を追加
-      </button>
+    <div class="card-header">
+      <span class="icon">📁</span>
+      <span id="section-cases">Case Registration / Case List</span>
     </div>
     <div class="card-body">
-      <div class="cases-list" id="cases-list">
-        <p style="color:var(--muted);font-size:13px;">案件はまだ登録されていません。</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+        5点以外の評価項目について、その根拠となる案件を登録してください。
+        各案件は、最も関係の強い評価項目1つに紐づけてください。
+      </p>
+
+      <!-- 案件入力フォーム -->
+      <div class="case-form">
+        <div class="case-form-title" id="case-form-title">新規案件登録</div>
+        <div class="form-grid case-form-grid">
+
+          <div class="form-group">
+            <label for="cf-relatedScoreItem">Related Score Item <span style="color:var(--accent)">*</span></label>
+            <select id="cf-relatedScoreItem">
+              <option value="">-- 選択してください --</option>
+              <option value="productQualityScore">Product Quality</option>
+              <option value="generalDefectScore">General Defect</option>
+              <option value="initialResponseScore">Initial Response</option>
+              <option value="correctiveActionScore">Corrective Action</option>
+              <option value="analysisSpeedScore">Analysis Speed</option>
+              <option value="analysisQualityScore">Analysis Quality</option>
+              <option value="customerHandlingScore">Customer Handling</option>
+            </select>
+            <span class="error-msg">Related Score Item を選択してください</span>
+          </div>
+
+          <div class="form-group">
+            <label for="cf-component">Component <span style="color:var(--accent)">*</span></label>
+            <select id="cf-component">
+              <option value="">-- 選択してください --</option>
+              <option>NC Controller</option>
+              <option>Drive Unit</option>
+              <option>Servo Motor</option>
+              <option>Spindle Motor</option>
+              <option>Detector (Encoder)</option>
+              <option>Other</option>
+            </select>
+            <span class="error-msg">Component を選択してください</span>
+          </div>
+
+          <div class="form-group">
+            <label for="cf-issueType">Issue Type <span style="color:var(--accent)">*</span></label>
+            <select id="cf-issueType">
+              <option value="">-- 選択してください --</option>
+              <option>Alarm / Error</option>
+              <option>No Operation (Not Running)</option>
+              <option>Performance Degradation</option>
+              <option>Intermittent Failure</option>
+              <option>Communication Failure</option>
+              <option>Power Failure</option>
+              <option>Mechanical Issue</option>
+              <option>Overheat</option>
+              <option>Noise / Vibration</option>
+              <option>Parameter / Setting Issue</option>
+              <option>Software / Firmware Issue</option>
+              <option>Unknown</option>
+            </select>
+            <span class="error-msg">Issue Type を選択してください</span>
+          </div>
+
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="cf-issue">Issue <span style="color:var(--accent)">*</span></label>
+            <textarea id="cf-issue" rows="3" placeholder="発生事象を記入してください"></textarea>
+            <span class="error-msg">Issue を入力してください</span>
+          </div>
+
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="cf-impact">Impact <span style="color:var(--accent)">*</span></label>
+            <textarea id="cf-impact" rows="3" placeholder="影響を記入してください"></textarea>
+            <span class="error-msg">Impact を入力してください</span>
+          </div>
+
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="cf-response">Response <span style="color:var(--accent)">*</span></label>
+            <textarea id="cf-response" rows="3" placeholder="対応評価を記入してください"></textarea>
+            <span class="error-msg">Response を入力してください</span>
+          </div>
+
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="cf-request">Request</label>
+            <textarea id="cf-request" rows="3" placeholder="要望（任意）"></textarea>
+          </div>
+
+        </div>
+        <div class="case-form-actions">
+          <button class="btn btn-outline" id="btn-case-cancel" style="display:none;">キャンセル</button>
+          <button class="btn btn-primary" id="btn-case-save">＋ 案件を追加</button>
+        </div>
+      </div>
+
+      <!-- 案件一覧 -->
+      <div id="case-list-wrapper" style="margin-top:24px;">
+        <div class="case-list-header">登録済み案件一覧</div>
+        <div id="cases-list">
+          <p style="color:var(--muted);font-size:13px;padding:12px 0;">案件はまだ登録されていません。</p>
+        </div>
       </div>
     </div>
   </section>
@@ -114,9 +222,27 @@
     <button class="btn btn-outline" id="btn-validate">
       🔍 入力チェック
     </button>
+    <button class="btn btn-outline" id="btn-generate-json">
+      📄 JSON 生成
+    </button>
     <button class="btn btn-primary btn-large" id="btn-send">
       📧 送信（メール作成）
     </button>
+  </div>
+
+  <!-- JSON プレビュー -->
+  <div id="json-preview-wrapper" class="card" style="display:none;" aria-live="polite">
+    <div class="card-header">
+      <span class="icon">📄</span>
+      <span>生成 JSON</span>
+    </div>
+    <div class="card-body">
+      <textarea id="json-preview" rows="20" readonly></textarea>
+      <div style="margin-top:10px;display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-outline" id="btn-copy-json">📋 コピー</button>
+        <button class="btn btn-outline" id="btn-download-json">💾 ダウンロード</button>
+      </div>
+    </div>
   </div>
 
 </main>
