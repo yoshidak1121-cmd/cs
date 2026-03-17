@@ -1,32 +1,37 @@
 {
-  "SurveyID": "20260318-204512",
-  "SurveyYear": 2025,
-  "FiscalHalf": "2H",
-  "ServiceCenter": "東京SC",
-  "Revision": 1,
-  "OverallEvaluation": [
-    { "Item": "製品品質",     "Score": 4, "CaseIDs": ["CASE-001"] },
-    { "Item": "顧客応対",     "Score": 5, "CaseIDs": [] },
-    { "Item": "技術サポート", "Score": 3, "CaseIDs": ["CASE-001", "CASE-002"] },
-    { "Item": "納期対応",     "Score": 5, "CaseIDs": [] },
-    { "Item": "提案力",       "Score": 4, "CaseIDs": ["CASE-002"] },
-    { "Item": "価格対応",     "Score": 5, "CaseIDs": [] },
-    { "Item": "総合満足度",   "Score": 4, "CaseIDs": ["CASE-001"] }
-  ],
-  "Cases": [
+  "serviceCenter": "MEAP",
+  "surveyYear": "2025",
+  "fiscalHalf": "2H",
+  "surveyId": "20260318-204512",
+  "revision": 1,
+  "overallEvaluation": {
+    "productQualityScore": 3,
+    "generalDefectScore": 5,
+    "initialResponseScore": 4,
+    "correctiveActionScore": 5,
+    "analysisSpeedScore": 5,
+    "analysisQualityScore": 5,
+    "customerHandlingScore": 5
+  },
+  "cases": [
     {
-      "CaseID": "CASE-001",
-      "Impact":   "製品の一部に品質問題が発生し、納品が遅延した。",
-      "Response": "担当者が迅速に代替品を手配し、問題を解決した。",
-      "Request":  "品質チェック体制の強化をお願いしたい。",
-      "Comment":  "今後の改善に期待している。"
+      "caseId": "01",
+      "relatedScoreItem": "productQualityScore",
+      "component": "NC Controller",
+      "issueType": "Alarm / Error",
+      "issue": "新規アラーム不具合が発生",
+      "impact": "営業活動に影響",
+      "response": "顧客説明に時間を要した",
+      "request": "恒久対策の早期展開を希望"
     },
     {
-      "CaseID": "CASE-002",
-      "Impact":   "技術的なトラブルが発生し、業務が一時停止した。",
-      "Response": "エンジニアが当日対応し、翌日には復旧した。",
-      "Request":  "サポート窓口の拡充を希望する。",
-      "Comment":  "対応は迅速だったが、再発防止策を期待する。"
+      "caseId": "02",
+      "relatedScoreItem": "initialResponseScore",
+      "component": "Drive Unit",
+      "issueType": "No Operation (Not Running)",
+      "issue": "起動時に Drive Unit が応答しない現象が発生",
+      "impact": "ライン停止により生産に遅延が生じた",
+      "response": "翌日に現地対応し、ユニット交換で復旧"
     }
   ]
 }
