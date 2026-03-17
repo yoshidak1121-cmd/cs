@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>顧客満足度入力フォーム</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ========== ヘッダー ========== -->
+<header>
+  <span style="font-size:22px;">📋</span>
+  <h1>顧客満足度入力フォーム</h1>
+  <span class="badge">NC-CSAT</span>
+</header>
+
+<main>
+
+  <!-- ========== バリデーションアラート ========== -->
+  <div id="validation-alert" class="alert alert-error" role="alert">
+    <strong>⚠ 入力エラーがあります</strong>
+    <ul id="validation-errors"></ul>
+  </div>
+
+  <!-- ========== 1. 基本情報 ========== -->
+  <section class="card" aria-labelledby="section-basic">
+    <div class="card-header">
+      <span class="icon">📌</span>
+      <span id="section-basic">基本情報</span>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label for="surveyID">Survey ID</label>
+          <input type="text" id="surveyID" readonly aria-label="Survey ID（自動生成）">
+        </div>
+
+        <div class="form-group">
+          <label for="surveyYear">Survey Year</label>
+          <input type="text" id="surveyYear" readonly aria-label="Survey Year">
+        </div>
+
+        <div class="form-group">
+          <label for="fiscalHalf">Fiscal Half</label>
+          <input type="text" id="fiscalHalf" readonly aria-label="Fiscal Half">
+        </div>
+
+        <div class="form-group">
+          <label for="revision">Revision</label>
+          <div class="revision-row">
+            <input type="number" id="revision" readonly min="1" aria-label="Revision番号">
+            <button class="btn btn-outline" id="btn-revision-up" title="修正提出時にリビジョンを加算">
+              ＋ 修正
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group" style="grid-column: 1 / -1;">
+          <label for="serviceCenter">サービスセンター <span style="color:var(--accent)">*</span></label>
+          <input type="text" id="serviceCenter" placeholder="例：東京SC" aria-required="true">
+          <span class="error-msg">サービスセンターを入力してください</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 2. 総合評価 ========== -->
+  <section class="card" aria-labelledby="section-eval">
+    <div class="card-header">
+      <span class="icon">⭐</span>
+      <span id="section-eval">総合評価（1〜5 点）</span>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <table class="eval-table" aria-label="総合評価入力テーブル">
+        <thead>
+          <tr>
+            <th style="width:25%">評価項目</th>
+            <th style="width:35%">スコア&nbsp;<span style="font-weight:400;color:var(--muted)">(1=低い ／ 5=高い)</span></th>
+            <th style="width:40%">根拠案件</th>
+          </tr>
+        </thead>
+        <tbody id="eval-tbody">
+          <!-- app.js で動的生成 -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ========== 3. 案件登録 ========== -->
+  <section class="card" aria-labelledby="section-cases">
+    <div class="card-header" style="justify-content:space-between;">
+      <span>
+        <span class="icon">📁</span>
+        <span id="section-cases">案件登録</span>
+      </span>
+      <button class="btn btn-outline" id="btn-add-case" style="background:#fff;">
+        ＋ 案件を追加
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="cases-list" id="cases-list">
+        <p style="color:var(--muted);font-size:13px;">案件はまだ登録されていません。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 4. アクションバー ========== -->
+  <div class="action-bar">
+    <button class="btn btn-outline" id="btn-validate">
+      🔍 入力チェック
+    </button>
+    <button class="btn btn-primary btn-large" id="btn-send">
+      📧 送信（メール作成）
+    </button>
+  </div>
+
+</main>
+
+<!-- トースト通知 -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
