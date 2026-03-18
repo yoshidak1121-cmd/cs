@@ -304,6 +304,12 @@
       accent-color: var(--primary);
     }
 
+    .checkbox-label.cb-disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
     /* ---- Case List ---- */
     .case-list-header {
       font-size: 12px;
@@ -1090,6 +1096,33 @@ function populateRelatedScoreItemCheckboxes() {
     const isChecked = checked.includes(item.key) ? " checked" : "";
     return `<label class="checkbox-label"><input type="checkbox" name="cf-relatedItem" value="${escHtml(item.key)}"${isChecked}> ${escHtml(label)}</label>`;
   }).join("");
+
+  // ① と ② の排他制御（①をチェックすると②は選択不可、②をチェックすると①は選択不可）
+  const cb1 = container.querySelector("input[value='productQualityScore']");
+  const cb2 = container.querySelector("input[value='generalDefectScore']");
+  if (cb1 && cb2) {
+    applyMutualExclusion(cb1, cb2);
+    cb1.addEventListener("change", () => applyMutualExclusion(cb1, cb2));
+    cb2.addEventListener("change", () => applyMutualExclusion(cb1, cb2));
+  }
+}
+
+/** ① と ② の排他制御を適用する */
+function applyMutualExclusion(cb1, cb2) {
+  if (cb1.checked) {
+    cb2.checked  = false;
+    cb2.disabled = true;
+    cb2.closest("label").classList.add("cb-disabled");
+  } else if (cb2.checked) {
+    cb1.checked  = false;
+    cb1.disabled = true;
+    cb1.closest("label").classList.add("cb-disabled");
+  } else {
+    cb1.disabled = false;
+    cb1.closest("label").classList.remove("cb-disabled");
+    cb2.disabled = false;
+    cb2.closest("label").classList.remove("cb-disabled");
+  }
 }
 
 function getCheckedRelatedItems() {
