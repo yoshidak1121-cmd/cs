@@ -202,6 +202,52 @@
 
     .eval-table tbody tr.has-error-row { background: #fdf3f2; }
 
+    /* Group header rows */
+    .eval-group-header td.eval-group-label {
+      background: #eef3fb;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 13px;
+      padding: 7px 12px;
+      border-top: 2px solid var(--primary);
+      letter-spacing: .04em;
+    }
+
+    /* Eval item label cell */
+    .eval-label-cell { font-size: 12px; line-height: 1.5; }
+
+    /* Score criteria hints */
+    .criteria-hint {
+      margin-top: 6px;
+      background: #f8fafd;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 5px 8px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .criteria-row { display: flex; gap: 4px; }
+    .criteria-score { font-weight: 700; color: var(--primary); min-width: 18px; }
+
+    /* Score comment textarea */
+    .score-comment {
+      width: 100%;
+      font-family: inherit;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 5px 8px;
+      resize: vertical;
+      color: var(--text);
+      background: #fff;
+    }
+    .score-comment:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26,95,168,.12);
+    }
+
     /* Score select */
     .score-select {
       width: auto;
@@ -579,18 +625,36 @@
       <table class="eval-table" aria-label="評価入力テーブル">
         <thead>
           <tr>
-            <th style="width:5%" data-i18n="thNo">No</th>
-            <th style="width:22%" data-i18n="thScoreItem">評価項目</th>
-            <th style="width:28%">
+            <th style="width:4%" data-i18n="thNo">No</th>
+            <th style="width:24%" data-i18n="thScoreItem">評価項目</th>
+            <th style="width:18%">
               <span data-i18n="thScore">スコア</span>&nbsp;<span style="font-weight:400;color:var(--muted)" data-i18n="thScoreHint">(1=低い ／ 5=高い)</span>
             </th>
-            <th style="width:45%" data-i18n="thEvidence">根拠案件</th>
+            <th style="width:28%" data-i18n="thComment">判定コメント</th>
+            <th style="width:26%" data-i18n="thEvidence">根拠案件</th>
           </tr>
         </thead>
         <tbody id="eval-tbody">
           <!-- JS で動的生成 -->
         </tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- ========== 2b. Overall Summary ========== -->
+  <section class="card" aria-labelledby="section-summary">
+    <div class="card-header">
+      <span class="icon">📝</span>
+      <span id="section-summary" data-i18n="sectionSummary">■ 全体要約（簡潔）</span>
+    </div>
+    <div class="card-body">
+      <div class="form-group">
+        <label for="overallSummary" data-i18n="labelOverallSummary">全体要約コメント</label>
+        <textarea id="overallSummary" rows="4"
+          placeholder="全体的な評価を簡潔にまとめてください"
+          data-i18n-ph="phOverallSummary"
+          aria-label="Overall Summary"></textarea>
+      </div>
     </div>
   </section>
 
@@ -774,13 +838,19 @@ const T = {
     validationAlertTitle:   "⚠ 入力エラーがあります",
     sectionBasic:           "Basic Information",
     sectionEval:            "Overall Evaluation",
+    sectionSummary:         "■ 全体要約（簡潔）",
     sectionCases:           "Case Registration / Case List",
-    scoreTip:               "①～⑦の総合評価を入力してください。5点以外の項目については、下段に根拠案件の登録が必要です。",
+    scoreTip:               "①～⑧の総合評価を入力してください（評価は5段階：5＝満足、1＝不満）。5点以外の項目については、下段に根拠案件の登録が必要です。",
     thNo:                   "No",
     thScoreItem:            "評価項目",
     thScore:                "スコア",
-    thScoreHint:            "(1=低い ／ 5=高い)",
+    thScoreHint:            "(1=不満 ／ 5=満足)",
+    thComment:              "判定コメント",
     thEvidence:             "根拠案件",
+    labelOverallSummary:    "全体要約コメント",
+    phOverallSummary:       "全体的な評価を簡潔にまとめてください",
+    labelComment:           "コメント",
+    phScoreComment:         "コメントを記入してください（任意）",
     caseTip:                "5点以外の評価項目について、その根拠となる案件を登録してください。各案件は、最も関係の強い評価項目1つに紐づけてください。",
     newCaseTitle:           "新規案件登録",
     editCaseSuffix:         "を編集",
@@ -853,13 +923,19 @@ const T = {
     validationAlertTitle:   "⚠ Input errors found",
     sectionBasic:           "Basic Information",
     sectionEval:            "Overall Evaluation",
+    sectionSummary:         "■ Overall Summary (Brief)",
     sectionCases:           "Case Registration / Case List",
-    scoreTip:               "Enter overall scores for ①–⑦. For items other than 5, at least one evidence case must be registered below.",
+    scoreTip:               "Enter overall scores for ①–⑧ (5-level scale: 5=Satisfied, 1=Dissatisfied). For items other than 5, at least one evidence case must be registered below.",
     thNo:                   "No",
     thScoreItem:            "Eval Item",
     thScore:                "Score",
-    thScoreHint:            "(1=Low / 5=High)",
+    thScoreHint:            "(1=Dissatisfied / 5=Satisfied)",
+    thComment:              "Judgment Comment",
     thEvidence:             "Evidence Cases",
+    labelOverallSummary:    "Overall Summary Comment",
+    phOverallSummary:       "Summarize the overall evaluation briefly",
+    labelComment:           "Comment",
+    phScoreComment:         "Add a comment (optional)",
     caseTip:                "Register evidence cases for items scored other than 5. Each case should be linked to the most relevant evaluation item.",
     newCaseTitle:           "New Case Registration",
     editCaseSuffix:         "– Edit",
@@ -989,14 +1065,76 @@ const FIXED = {
 const SCORE_OPTIONS = [5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1];
 
 const EVAL_ITEMS = [
-  { key: "productQualityScore",    ja: "製品品質",          en: "Product Quality",    no: "①" },
-  { key: "generalDefectScore",     ja: "一般不具合発生状況", en: "General Defect",      no: "②" },
-  { key: "initialResponseScore",   ja: "初期対応",           en: "Initial Response",    no: "③" },
-  { key: "correctiveActionScore",  ja: "処置の適正度",       en: "Corrective Action",   no: "④" },
-  { key: "analysisSpeedScore",     ja: "調査報告スピード",   en: "Analysis Speed",      no: "⑤" },
-  { key: "analysisQualityScore",   ja: "調査報告の質",       en: "Analysis Quality",    no: "⑥" },
-  { key: "customerHandlingScore",  ja: "顧客応対",           en: "Customer Handling",   no: "⑦" },
+  { key: "productQualityScore",    ja: "製品品質に対する体感度と、営業活動に支障をきたす不具合、ロット不具合の新規発生状況", en: "Product Quality (Sales/Lot Impact)",                                              no: "①" },
+  { key: "generalDefectScore",     ja: "その他、一般不具合の発生",                                                          en: "General Defect Occurrence",                                                      no: "②" },
+  { key: "initialResponseScore",   ja: "営業活動に支障をきたす不具合発生時の初期対応（レスポンス）",                       en: "Initial Response to Sales-Impacting Defects",                                    no: "③" },
+  { key: "correctiveActionScore",  ja: "営業活動に支障をきたす不具合に対する処置の適正度",                                 en: "Appropriateness of Corrective Action for Sales-Impacting Defects",               no: "④" },
+  { key: "analysisSpeedScore",     ja: "不具合調査報告のスピード",                                                          en: "Speed of Defect Investigation Report",                                           no: "⑤" },
+  { key: "analysisQualityScore",   ja: "不具合調査報告の中身（質）",                                                        en: "Quality of Defect Investigation Report",                                         no: "⑥" },
+  { key: "customerHandlingScore",  ja: "客先応対時の対応（客先起因の先入観なしに対応しているかの評価を含む）",             en: "Customer-Site Handling (incl. unbiased response evaluation)",                    no: "⑦" },
+  { key: "otherScore",             ja: "その他（製品品質、不具合対応以外）",                                               en: "Other (excl. Product Quality / Defect Response)",                                no: "⑧" },
 ];
+
+/** Grouping of EVAL_ITEMS into sections */
+const EVAL_GROUPS = [
+  { key: "productQuality",  ja: "製品品質",   en: "Product Quality",   items: ["productQualityScore", "generalDefectScore"] },
+  { key: "defectResponse",  ja: "不具合対応", en: "Defect Response",   items: ["initialResponseScore", "correctiveActionScore", "analysisSpeedScore", "analysisQualityScore", "customerHandlingScore"] },
+  { key: "other",           ja: "その他",     en: "Other",             items: ["otherScore"] },
+];
+
+/** 5-level score criteria per eval item (ja only; displayed as hints) */
+const SCORE_CRITERIA = {
+  productQualityScore: {
+    5: "ほぼ発生なし・顧客評価高い",
+    4: "稀に発生・営業影響ほぼなし",
+    3: "時々発生・影響小",
+    2: "営業影響あり・改善必要",
+    1: "重大影響・緊急改善必要",
+  },
+  generalDefectScore: {
+    5: "ほぼ発生なし",
+    4: "少ない・クレームなし",
+    3: "時々発生・クレーム少",
+    2: "多発・クレーム多",
+    1: "頻発・営業影響大",
+  },
+  initialResponseScore: {
+    5: "迅速かつ的確",
+    4: "やや遅いが適切",
+    3: "完全ではないが誠実",
+    2: "対応が悪い場合あり",
+    1: "非常に悪い",
+  },
+  correctiveActionScore: {
+    5: "適切・後遺症なし",
+    4: "ほぼ適切・影響少",
+    3: "不十分だが信頼維持",
+    2: "不適切・失注あり",
+    1: "不適切・失注多",
+  },
+  analysisSpeedScore: {
+    5: "期限厳守",
+    4: "ほぼ遵守",
+    3: "許容範囲",
+    2: "遅延多い",
+    1: "ほぼ守られない",
+  },
+  analysisQualityScore: {
+    5: "解析力高い・顧客評価高",
+    4: "十分・納得得られる",
+    3: "不十分だが信頼維持",
+    2: "再調査多い",
+    1: "解析力低く問題化",
+  },
+  customerHandlingScore: {
+    5: "配慮・姿勢ともに優秀",
+    4: "概ね満足",
+    3: "信頼維持レベル",
+    2: "配慮不足で問題発生",
+    1: "問題多発",
+  },
+  otherScore: null,
+};
 
 /**
  * Sub-items available for additional multi-select when:
@@ -1156,53 +1294,85 @@ function updateSubItemsVisibility(preChecked) {
    総合評価テーブル
    ============================================================ */
 function renderEvalTable() {
-  // Preserve scores entered before re-render
-  const savedScores = {};
+  // Preserve scores and comments entered before re-render
+  const savedScores   = {};
+  const savedComments = {};
   EVAL_ITEMS.forEach(item => {
     const sel = document.getElementById(`score_${item.key}`);
     if (sel) savedScores[item.key] = sel.value;
+    const ta = document.getElementById(`comment_${item.key}`);
+    if (ta) savedComments[item.key] = ta.value;
   });
 
   const tbody = document.getElementById("eval-tbody");
   tbody.innerHTML = "";
 
-  EVAL_ITEMS.forEach(item => {
-    const tr = document.createElement("tr");
-    tr.id = `eval-row-${item.key}`;
+  EVAL_GROUPS.forEach(group => {
+    // Group header row
+    const groupLabel = group[currentLang] || group.en;
+    const headerTr = document.createElement("tr");
+    headerTr.className = "eval-group-header";
+    headerTr.innerHTML = `<td colspan="5" class="eval-group-label">■ ${escHtml(groupLabel)}</td>`;
+    tbody.appendChild(headerTr);
 
-    const scoreOptions = SCORE_OPTIONS
-      .map(v => `<option value="${v}">${v}</option>`)
-      .join("");
+    group.items.forEach(key => {
+      const item = EVAL_ITEMS.find(i => i.key === key);
+      if (!item) return;
 
-    const itemLabel = item[currentLang] || item.en;
+      const tr = document.createElement("tr");
+      tr.id = `eval-row-${item.key}`;
 
-    tr.innerHTML = `
-      <td style="font-weight:700;text-align:center;">${item.no}</td>
-      <td style="font-weight:600;">${escHtml(itemLabel)}</td>
-      <td>
-        <select id="score_${item.key}" class="score-select" aria-label="${escHtml(itemLabel)}">
-          <option value="">${t("selectPlaceholder")}</option>
-          ${scoreOptions}
-        </select>
-        <div class="required-cases-note" id="scoreNote_${item.key}" style="display:none;">
-          ${escHtml(t("scoreNote"))}
-        </div>
-      </td>
-      <td>
-        <div class="case-tags" id="caseTags_${item.key}"></div>
-      </td>
-    `;
-    tbody.appendChild(tr);
+      const scoreOptions = SCORE_OPTIONS
+        .map(v => `<option value="${v}">${v}</option>`)
+        .join("");
 
-    const scoreEl = document.getElementById(`score_${item.key}`);
-    if (savedScores[item.key]) scoreEl.value = savedScores[item.key];
+      const itemLabel = item[currentLang] || item.en;
+      const criteria  = SCORE_CRITERIA[item.key];
+      const criteriaHtml = criteria
+        ? Object.entries(criteria)
+            .sort((a, b) => b[0] - a[0])
+            .map(([score, desc]) => `<div class="criteria-row"><span class="criteria-score">${score}:</span> ${escHtml(desc)}</div>`)
+            .join("")
+        : "";
 
-    scoreEl.addEventListener("change", () => {
+      tr.innerHTML = `
+        <td style="font-weight:700;text-align:center;">${item.no}</td>
+        <td style="font-weight:600;" class="eval-label-cell">
+          ${escHtml(itemLabel)}
+          ${criteriaHtml ? `<div class="criteria-hint">${criteriaHtml}</div>` : ""}
+        </td>
+        <td>
+          <select id="score_${item.key}" class="score-select" aria-label="${escHtml(itemLabel)}">
+            <option value="">${t("selectPlaceholder")}</option>
+            ${scoreOptions}
+          </select>
+          <div class="required-cases-note" id="scoreNote_${item.key}" style="display:none;">
+            ${escHtml(t("scoreNote"))}
+          </div>
+        </td>
+        <td>
+          <textarea id="comment_${item.key}" class="score-comment" rows="2"
+            placeholder="${escHtml(t("phScoreComment"))}"
+            aria-label="${escHtml(itemLabel)} ${escHtml(t("labelComment"))}"></textarea>
+        </td>
+        <td>
+          <div class="case-tags" id="caseTags_${item.key}"></div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+
+      const scoreEl = document.getElementById(`score_${item.key}`);
+      if (savedScores[item.key])   scoreEl.value = savedScores[item.key];
+      const commentEl = document.getElementById(`comment_${item.key}`);
+      if (savedComments[item.key]) commentEl.value = savedComments[item.key];
+
+      scoreEl.addEventListener("change", () => {
+        updateScoreNote(item.key);
+        refreshCaseTags();
+      });
+
       updateScoreNote(item.key);
-      refreshCaseTags();
     });
-
-    updateScoreNote(item.key);
   });
 
   refreshCaseTags();
@@ -1478,8 +1648,13 @@ function buildJSON() {
 
   const overallEvaluation = {};
   EVAL_ITEMS.forEach(item => {
-    overallEvaluation[item.key] = getScore(item.key);
+    const score     = getScore(item.key);
+    const commentEl = document.getElementById(`comment_${item.key}`);
+    const comment   = commentEl ? commentEl.value.trim() : "";
+    overallEvaluation[item.key] = { score, comment };
   });
+
+  const summary = (document.getElementById("overallSummary").value || "").trim();
 
   const cases = state.cases.map(c => {
     const obj = {
@@ -1498,7 +1673,7 @@ function buildJSON() {
     return obj;
   });
 
-  return {
+  const result = {
     serviceCenter:     sc,
     surveyYear:        FIXED.SURVEY_YEAR,
     fiscalHalf:        FIXED.FISCAL_HALF,
@@ -1507,6 +1682,8 @@ function buildJSON() {
     overallEvaluation: overallEvaluation,
     cases:             cases,
   };
+  if (summary) result.overallSummary = summary;
+  return result;
 }
 
 function generateJSON() {
