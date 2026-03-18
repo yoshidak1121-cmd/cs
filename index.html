@@ -208,6 +208,63 @@
 
     .eval-table tbody tr.has-error-row { background: #fdf3f2; }
 
+    /* Scoring scale reference table */
+    .score-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 12px;
+      font-size: 13px;
+    }
+
+    .score-table th,
+    .score-table td {
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      vertical-align: middle;
+    }
+
+    .score-table thead th {
+      background: #f4f4f4;
+      font-weight: 700;
+    }
+
+    /* Criteria table column styles */
+    .score-criteria-table .criteria-no {
+      width: 5%;
+      text-align: center;
+      font-weight: 700;
+      font-size: 15px;
+      vertical-align: middle;
+    }
+
+    .score-criteria-table .criteria-name {
+      width: 13%;
+      font-weight: 600;
+      vertical-align: middle;
+    }
+
+    .score-criteria-table .criteria-content {
+      width: 30%;
+      vertical-align: top;
+      font-size: 12px;
+      line-height: 1.8;
+      white-space: pre-line;
+    }
+
+    .score-criteria-table .criteria-score {
+      width: 6%;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .score-criteria-table tr.criteria-group-odd td {
+      background: #f8f9fd;
+    }
+
+    .score-criteria-table tr.criteria-group-even td {
+      background: #ffffff;
+    }
+
     /* Score select */
     .score-select {
       width: auto;
@@ -588,6 +645,23 @@
       <p style="padding:12px 18px 4px;font-size:13px;color:var(--muted);" data-i18n="scoreTip">
         ①～⑦の総合評価を入力してください。5点以外の項目については、下段に根拠案件の登録が必要です。
       </p>
+      <p style="padding:4px 18px 4px;font-size:13px;color:var(--muted);" data-i18n="scoreTip2">
+        以下は各評価項目の点数基準です：
+      </p>
+      <table class="score-table score-criteria-table">
+        <thead>
+          <tr>
+            <th data-i18n="thNo">No</th>
+            <th data-i18n="thScoreItem">評価項目</th>
+            <th data-i18n="thCriteriaContent">評価内容</th>
+            <th data-i18n="thScore">スコア</th>
+            <th data-i18n="thCriteriaBasis">点数基準</th>
+          </tr>
+        </thead>
+        <tbody id="criteria-tbody">
+          <!-- JS で動的生成 -->
+        </tbody>
+      </table>
       <table class="eval-table" aria-label="評価入力テーブル">
         <thead>
           <tr>
@@ -778,6 +852,9 @@ const T = {
     sectionEval:            "Overall Evaluation",
     sectionCases:           "Case Registration / Case List",
     scoreTip:               "①～⑦の総合評価を入力してください。5点以外の項目については、下段に根拠案件の登録が必要です。",
+    scoreTip2:              "以下は各評価項目の点数基準です：",
+    thCriteriaContent:      "評価内容",
+    thCriteriaBasis:        "点数基準",
     thNo:                   "No",
     thScoreItem:            "評価項目",
     thScore:                "スコア",
@@ -857,6 +934,9 @@ const T = {
     sectionEval:            "Overall Evaluation",
     sectionCases:           "Case Registration / Case List",
     scoreTip:               "Enter overall scores for ①–⑦. For items other than 5, at least one evidence case must be registered below.",
+    scoreTip2:              "The following are the scoring criteria for each evaluation item:",
+    thCriteriaContent:      "Evaluation Content",
+    thCriteriaBasis:        "Score Basis",
     thNo:                   "No",
     thScoreItem:            "Eval Item",
     thScore:                "Score",
@@ -968,6 +1048,7 @@ function applyLang() {
   populateRelatedScoreItemCheckboxes();
 
   // Re-render dynamic tables (preserving scores / cases)
+  renderCriteriaTable();
   renderEvalTable();
   renderCaseList();
 }
@@ -1001,6 +1082,107 @@ const EVAL_ITEMS = [
   { key: "analysisSpeedScore",     ja: "調査報告スピード",   en: "Analysis Speed",      no: "⑤" },
   { key: "analysisQualityScore",   ja: "調査報告の質",       en: "Analysis Quality",    no: "⑥" },
   { key: "customerHandlingScore",  ja: "顧客応対",           en: "Customer Handling",   no: "⑦" },
+];
+
+const SCORE_CRITERIA = [
+  {
+    key: "productQualityScore",
+    content: {
+      ja: "製品品質に対する体感度\n営業活動に支障をきたす不具合\nロット不具合の新規発生状況",
+      en: "Customer satisfaction with product quality\nDefects impeding sales activities\nNew lot defect occurrences",
+    },
+    scores: [
+      { val: 5, ja: "殆ど発生なし・顧客評価高い",   en: "Almost none; high customer satisfaction" },
+      { val: 4, ja: "稀に発生・営業影響ほぼなし",   en: "Rare occurrences; minimal sales impact" },
+      { val: 3, ja: "時々発生・影響小",             en: "Occasional occurrences; minor impact" },
+      { val: 2, ja: "営業影響あり・改善必要",       en: "Sales impact present; improvement needed" },
+      { val: 1, ja: "重大影響・緊急改善必要",       en: "Critical impact; urgent improvement required" },
+    ],
+  },
+  {
+    key: "generalDefectScore",
+    content: {
+      ja: "その他一般不具合の発生状況",
+      en: "Occurrence of other general defects",
+    },
+    scores: [
+      { val: 5, ja: "殆ど発生なし",         en: "Almost none" },
+      { val: 4, ja: "少ない・クレームなし",  en: "Few; no complaints" },
+      { val: 3, ja: "時々発生・クレーム少",  en: "Occasional; few complaints" },
+      { val: 2, ja: "多発・クレーム多",      en: "Frequent; many complaints" },
+      { val: 1, ja: "頻発・営業影響大",      en: "Very frequent; major sales impact" },
+    ],
+  },
+  {
+    key: "initialResponseScore",
+    content: {
+      ja: "不具合発生時の初期対応（レスポンス）",
+      en: "Initial response (responsiveness) when defects occur",
+    },
+    scores: [
+      { val: 5, ja: "迅速かつ的確",           en: "Swift and accurate" },
+      { val: 4, ja: "やや遅いが適切",         en: "Slightly delayed but appropriate" },
+      { val: 3, ja: "万全ではないが誠実",     en: "Not perfect but sincere" },
+      { val: 2, ja: "対応が悪い場合あり",     en: "Sometimes poor response" },
+      { val: 1, ja: "非常に悪い",             en: "Very poor" },
+    ],
+  },
+  {
+    key: "correctiveActionScore",
+    content: {
+      ja: "不具合に対する処置の適正度",
+      en: "Appropriateness of corrective action for defects",
+    },
+    scores: [
+      { val: 5, ja: "適切・後遺症ほぼなし",       en: "Appropriate; minimal aftereffects" },
+      { val: 4, ja: "ほぼ適切・後遺症少",         en: "Mostly appropriate; few aftereffects" },
+      { val: 3, ja: "信頼維持可能",               en: "Trust can be maintained" },
+      { val: 2, ja: "失注につながる場合あり",     en: "Sometimes leads to lost orders" },
+      { val: 1, ja: "失注が多い",                 en: "Many lost orders" },
+    ],
+  },
+  {
+    key: "analysisSpeedScore",
+    content: {
+      ja: "不具合調査報告のスピード",
+      en: "Speed of defect investigation reports",
+    },
+    scores: [
+      { val: 5, ja: "期限厳守",       en: "Deadlines strictly met" },
+      { val: 4, ja: "ほぼ遵守",       en: "Mostly met" },
+      { val: 3, ja: "許容範囲",       en: "Within acceptable range" },
+      { val: 2, ja: "遅延多い",       en: "Many delays" },
+      { val: 1, ja: "ほぼ守られない", en: "Almost never met" },
+    ],
+  },
+  {
+    key: "analysisQualityScore",
+    content: {
+      ja: "不具合調査報告の内容（質）",
+      en: "Quality of defect investigation report content",
+    },
+    scores: [
+      { val: 5, ja: "解析力高い・評価高い", en: "High analytical capability; high evaluation" },
+      { val: 4, ja: "十分・納得あり",       en: "Sufficient; convincing" },
+      { val: 3, ja: "信頼維持可能",         en: "Trust can be maintained" },
+      { val: 2, ja: "再調査多い",           en: "Many re-investigations required" },
+      { val: 1, ja: "解析力低い",           en: "Low analytical capability" },
+    ],
+  },
+  {
+    key: "customerHandlingScore",
+    content: {
+      ja: "顧客対応（配慮・マナー・姿勢）",
+      en: "Customer handling (consideration, manners, attitude)",
+    },
+    scores: [
+      { val: 5, ja: "申し分なし・真摯",       en: "Impeccable; sincere" },
+      { val: 4, ja: "ほぼ満足",               en: "Mostly satisfactory" },
+      { val: 3, ja: "信頼維持可能",           en: "Trust can be maintained" },
+      { val: 2, ja: "不足ありトラブル",       en: "Deficiencies causing trouble" },
+      { val: 1, ja: "トラブル多発",           en: "Frequent trouble" },
+    ],
+  },
 ];
 
 
@@ -1077,6 +1259,7 @@ function init() {
   document.getElementById("revision").value   = state.revision;
 
   populateRelatedScoreItemCheckboxes();
+  renderCriteriaTable();
   renderEvalTable();
 
   document.getElementById("btn-revision-up").addEventListener("click", incrementRevision);
@@ -1189,6 +1372,62 @@ function renderEvalTable() {
   });
 
   refreshCaseTags();
+}
+
+/* ============================================================
+   点数基準テーブル
+   ============================================================ */
+function renderCriteriaTable() {
+  const tbody = document.getElementById("criteria-tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  SCORE_CRITERIA.forEach((item, itemIdx) => {
+    const evalItem  = EVAL_ITEMS.find(e => e.key === item.key);
+    if (!evalItem) return;
+
+    const itemLabel = evalItem[currentLang] || evalItem.en;
+    const content   = item.content[currentLang] || item.content.en;
+    const rowClass  = itemIdx % 2 === 0 ? "criteria-group-odd" : "criteria-group-even";
+    const rowCount  = item.scores.length;
+
+    item.scores.forEach((score, scoreIdx) => {
+      const tr = document.createElement("tr");
+      tr.className = rowClass;
+
+      if (scoreIdx === 0) {
+        const tdNo = document.createElement("td");
+        tdNo.rowSpan = rowCount;
+        tdNo.className = "criteria-no";
+        tdNo.textContent = evalItem.no;
+
+        const tdName = document.createElement("td");
+        tdName.rowSpan = rowCount;
+        tdName.className = "criteria-name";
+        tdName.textContent = itemLabel;
+
+        const tdContent = document.createElement("td");
+        tdContent.rowSpan = rowCount;
+        tdContent.className = "criteria-content";
+        tdContent.textContent = content;
+
+        tr.appendChild(tdNo);
+        tr.appendChild(tdName);
+        tr.appendChild(tdContent);
+      }
+
+      const tdScore = document.createElement("td");
+      tdScore.className = "criteria-score";
+      tdScore.textContent = score.val;
+
+      const tdBasis = document.createElement("td");
+      tdBasis.textContent = score[currentLang] || score.en;
+
+      tr.appendChild(tdScore);
+      tr.appendChild(tdBasis);
+      tbody.appendChild(tr);
+    });
+  });
 }
 
 function updateScoreNote(key) {
