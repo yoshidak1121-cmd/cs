@@ -6,22 +6,503 @@
   <title>顧客満足度入力フォーム (NC-CSAT)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ============================================================
+       顧客満足度入力Webアプリ — スタイルシート
+       ============================================================ */
+
+    /* ---- Reset / Base ---- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:   #1a5fa8;
+      --primary-d: #134a85;
+      --accent:    #e84c3d;
+      --bg:        #f4f6fb;
+      --surface:   #ffffff;
+      --border:    #d0d7e3;
+      --text:      #2c3e50;
+      --muted:     #6b7a99;
+      --radius:    8px;
+      --shadow:    0 2px 12px rgba(0,0,0,.10);
+    }
+
+    body {
+      font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+    }
+
+    /* ---- Header ---- */
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+
+    header .badge {
+      background: rgba(255,255,255,.2);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 11px;
+      letter-spacing: .05em;
+    }
+
+    /* Language toggle button */
+    .btn-lang {
+      margin-left: auto;
+      background: rgba(255,255,255,.15);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,.5);
+      border-radius: 20px;
+      padding: 4px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .btn-lang:hover { background: rgba(255,255,255,.3); }
+
+    /* ---- Main layout ---- */
+    main {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ---- Section cards ---- */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 18px;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: .06em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-header .icon { font-size: 16px; }
+
+    .card-body { padding: 18px; }
+
+    /* ---- Form grid ---- */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px 20px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+
+    .form-group label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 7px 10px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: #fff;
+      transition: border-color .2s, box-shadow .2s;
+      width: 100%;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26,95,168,.15);
+    }
+
+    .form-group input[readonly],
+    .form-group input[disabled] {
+      background: #eef1f7;
+      color: var(--muted);
+      cursor: default;
+    }
+
+    /* ---- Error state ---- */
+    .form-group.has-error input,
+    .form-group.has-error select,
+    .form-group.has-error textarea {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(232,76,61,.15);
+    }
+
+    .form-group .error-msg {
+      font-size: 11px;
+      color: var(--accent);
+      display: none;
+    }
+
+    .form-group.has-error .error-msg { display: block; }
+
+    /* ---- Evaluation table ---- */
+    .eval-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .eval-table th,
+    .eval-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .eval-table thead th {
+      background: #f0f4fb;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--muted);
+      letter-spacing: .06em;
+    }
+
+    .eval-table tbody tr:last-child td { border-bottom: none; }
+
+    .eval-table tbody tr:hover { background: #fafbfd; }
+
+    .eval-table tbody tr.has-error-row { background: #fdf3f2; }
+
+    /* Score select */
+    .score-select {
+      width: auto;
+      min-width: 100px;
+      padding: 5px 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .case-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      min-width: 80px;
+    }
+
+    .case-tag {
+      background: #e8f0fb;
+      color: var(--primary);
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .required-cases-note {
+      font-size: 11px;
+      color: var(--accent);
+      margin-top: 3px;
+    }
+
+    /* ---- Case Form ---- */
+    .case-form {
+      background: #f8fafd;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .case-form-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 14px;
+      letter-spacing: .04em;
+    }
+
+    .case-form-grid {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+
+    .case-form-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 14px;
+    }
+
+    /* ---- Checkbox group (multi-select sub-items) ---- */
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: #fff;
+      transition: border-color .2s, background .2s;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--text);
+    }
+
+    .checkbox-label:hover {
+      border-color: var(--primary);
+      background: #eef3fb;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      cursor: pointer;
+      width: 14px;
+      height: 14px;
+      margin: 0;
+      accent-color: var(--primary);
+    }
+
+    /* ---- Case List ---- */
+    .case-list-header {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 10px;
+    }
+
+    .case-list-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      overflow-x: auto;
+      display: block;
+    }
+
+    .case-list-table th,
+    .case-list-table td {
+      padding: 7px 9px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    .case-list-table thead th {
+      background: #f0f4fb;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--muted);
+      letter-spacing: .05em;
+      text-align: left;
+    }
+
+    .case-list-table tbody tr:hover { background: #fafbfd; }
+
+    .case-list-table td.cell-wrap {
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-width: 180px;
+    }
+
+    .case-list-table td.cell-actions {
+      white-space: nowrap;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    /* ---- Buttons ---- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: 5px;
+      border: none;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+      text-decoration: none;
+    }
+
+    .btn:active { transform: scale(.97); }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-d); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    .btn-outline:hover { background: #eef3fb; }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+    .btn-danger:hover { background: #fdf0ef; }
+
+    .btn-large {
+      padding: 12px 32px;
+      font-size: 15px;
+      border-radius: 7px;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 11px;
+    }
+
+    /* ---- Action bar ---- */
+    .action-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    /* ---- JSON preview ---- */
+    #json-preview {
+      width: 100%;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 12px;
+      color: var(--text);
+      background: #f8fafd;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 10px;
+      resize: vertical;
+    }
+
+    /* ---- Toast ---- */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #2c3e50;
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s, transform .3s;
+      z-index: 9999;
+      white-space: nowrap;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ---- Alert banner ---- */
+    .alert {
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .alert.show { display: block; }
+
+    .alert-error {
+      background: #fdf0ef;
+      border-left: 4px solid var(--accent);
+      color: #7b2d26;
+    }
+
+    .alert-error ul {
+      margin: 6px 0 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    /* ---- Revision control ---- */
+    .revision-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .revision-row input[type="number"] {
+      width: 70px;
+    }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 640px) {
+      header { padding: 12px 16px; }
+      header h1 { font-size: 16px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .case-form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
 <!-- ========== ヘッダー ========== -->
 <header>
   <span style="font-size:22px;">📋</span>
-  <h1>顧客満足度入力フォーム</h1>
+  <h1 data-i18n="headerTitle">顧客満足度入力フォーム</h1>
   <span class="badge">NC-CSAT</span>
+  <button class="btn-lang" id="btn-lang" onclick="toggleLang()">EN</button>
 </header>
 
 <main>
 
   <!-- ========== バリデーションアラート ========== -->
   <div id="validation-alert" class="alert alert-error" role="alert">
-    <strong>⚠ 入力エラーがあります</strong>
+    <strong data-i18n="validationAlertTitle">⚠ 入力エラーがあります</strong>
     <ul id="validation-errors"></ul>
   </div>
 
@@ -29,14 +510,14 @@
   <section class="card" aria-labelledby="section-basic">
     <div class="card-header">
       <span class="icon">📌</span>
-      <span id="section-basic">Basic Information</span>
+      <span id="section-basic" data-i18n="sectionBasic">Basic Information</span>
     </div>
     <div class="card-body">
       <div class="form-grid">
 
         <div class="form-group">
           <label for="surveyID">Survey ID</label>
-          <input type="text" id="surveyID" readonly aria-label="Survey ID（自動生成）">
+          <input type="text" id="surveyID" readonly aria-label="Survey ID">
         </div>
 
         <div class="form-group">
@@ -52,9 +533,9 @@
         <div class="form-group">
           <label for="revision">Revision</label>
           <div class="revision-row">
-            <input type="number" id="revision" readonly min="1" aria-label="Revision番号">
-            <button class="btn btn-outline" id="btn-revision-up" title="修正提出時にリビジョンを加算">
-              ＋ 修正
+            <input type="number" id="revision" readonly min="1" aria-label="Revision">
+            <button class="btn btn-outline" id="btn-revision-up">
+              <span data-i18n="btnRevisionUp">＋ 修正</span>
             </button>
           </div>
         </div>
@@ -62,7 +543,7 @@
         <div class="form-group" style="grid-column: 1 / -1;">
           <label for="serviceCenter">Service Center <span style="color:var(--accent)">*</span></label>
           <select id="serviceCenter" aria-required="true">
-            <option value="">-- 選択してください --</option>
+            <option value="" data-i18n-opt="selectPlaceholder">-- 選択してください --</option>
             <option>MEAU</option>
             <option>MEU</option>
             <option>MEACH</option>
@@ -78,7 +559,7 @@
             <option>陸NC</option>
             <option>西支NC</option>
           </select>
-          <span class="error-msg">Service Center を選択してください</span>
+          <span class="error-msg" data-i18n="errServiceCenterMsg">Service Center を選択してください</span>
         </div>
 
       </div>
@@ -89,23 +570,25 @@
   <section class="card" aria-labelledby="section-eval">
     <div class="card-header">
       <span class="icon">⭐</span>
-      <span id="section-eval">Overall Evaluation</span>
+      <span id="section-eval" data-i18n="sectionEval">Overall Evaluation</span>
     </div>
     <div class="card-body" style="padding:0;">
-      <p style="padding:12px 18px 4px;font-size:13px;color:var(--muted);">
+      <p style="padding:12px 18px 4px;font-size:13px;color:var(--muted);" data-i18n="scoreTip">
         ①～⑦の総合評価を入力してください。5点以外の項目については、下段に根拠案件の登録が必要です。
       </p>
-      <table class="eval-table" aria-label="総合評価入力テーブル">
+      <table class="eval-table" aria-label="評価入力テーブル">
         <thead>
           <tr>
-            <th style="width:5%">No</th>
-            <th style="width:22%">評価項目</th>
-            <th style="width:28%">スコア&nbsp;<span style="font-weight:400;color:var(--muted)">(1=低い ／ 5=高い)</span></th>
-            <th style="width:45%">根拠案件</th>
+            <th style="width:5%" data-i18n="thNo">No</th>
+            <th style="width:22%" data-i18n="thScoreItem">評価項目</th>
+            <th style="width:28%">
+              <span data-i18n="thScore">スコア</span>&nbsp;<span style="font-weight:400;color:var(--muted)" data-i18n="thScoreHint">(1=低い ／ 5=高い)</span>
+            </th>
+            <th style="width:45%" data-i18n="thEvidence">根拠案件</th>
           </tr>
         </thead>
         <tbody id="eval-tbody">
-          <!-- app.js で動的生成 -->
+          <!-- JS で動的生成 -->
         </tbody>
       </table>
     </div>
@@ -115,38 +598,44 @@
   <section class="card" aria-labelledby="section-cases">
     <div class="card-header">
       <span class="icon">📁</span>
-      <span id="section-cases">Case Registration / Case List</span>
+      <span id="section-cases" data-i18n="sectionCases">Case Registration / Case List</span>
     </div>
     <div class="card-body">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
-        5点以外の評価項目について、その根拠となる案件を登録してください。
-        各案件は、最も関係の強い評価項目1つに紐づけてください。
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;" data-i18n="caseTip">
+        5点以外の評価項目について、その根拠となる案件を登録してください。各案件は、最も関係の強い評価項目1つに紐づけてください。
       </p>
 
       <!-- 案件入力フォーム -->
       <div class="case-form">
-        <div class="case-form-title" id="case-form-title">新規案件登録</div>
+        <div class="case-form-title" id="case-form-title" data-i18n="newCaseTitle">新規案件登録</div>
         <div class="form-grid case-form-grid">
 
           <div class="form-group">
-            <label for="cf-relatedScoreItem">Related Score Item <span style="color:var(--accent)">*</span></label>
+            <label for="cf-relatedScoreItem">
+              <span data-i18n="labelRelatedScoreItem">Related Score Item</span>
+              <span style="color:var(--accent)"> *</span>
+            </label>
             <select id="cf-relatedScoreItem">
-              <option value="">-- 選択してください --</option>
-              <option value="productQualityScore">Product Quality</option>
-              <option value="generalDefectScore">General Defect</option>
-              <option value="initialResponseScore">Initial Response</option>
-              <option value="correctiveActionScore">Corrective Action</option>
-              <option value="analysisSpeedScore">Analysis Speed</option>
-              <option value="analysisQualityScore">Analysis Quality</option>
-              <option value="customerHandlingScore">Customer Handling</option>
+              <!-- JS で動的生成 -->
             </select>
-            <span class="error-msg">Related Score Item を選択してください</span>
+            <span class="error-msg" data-i18n="errRelatedScoreItemMsg">Related Score Item を選択してください</span>
+          </div>
+
+          <!-- ① or ② 選択時に表示される追加関連評価項目（複数選択） -->
+          <div class="form-group" id="cf-subItems-group" style="display:none; grid-column: 1 / -1;">
+            <label>
+              <span data-i18n="labelAdditionalItems">追加関連評価項目（複数選択可）</span>
+            </label>
+            <div class="checkbox-group" id="cf-subItems-checkboxes"></div>
           </div>
 
           <div class="form-group">
-            <label for="cf-component">Component <span style="color:var(--accent)">*</span></label>
+            <label for="cf-component">
+              <span data-i18n="labelComponent">Component</span>
+              <span style="color:var(--accent)"> *</span>
+            </label>
             <select id="cf-component">
-              <option value="">-- 選択してください --</option>
+              <option value="" data-i18n-opt="selectPlaceholder">-- 選択してください --</option>
               <option>NC Controller</option>
               <option>Drive Unit</option>
               <option>Servo Motor</option>
@@ -154,13 +643,16 @@
               <option>Detector (Encoder)</option>
               <option>Other</option>
             </select>
-            <span class="error-msg">Component を選択してください</span>
+            <span class="error-msg" data-i18n="errComponentMsg">Component を選択してください</span>
           </div>
 
           <div class="form-group">
-            <label for="cf-issueType">Issue Type <span style="color:var(--accent)">*</span></label>
+            <label for="cf-issueType">
+              <span data-i18n="labelIssueType">Issue Type</span>
+              <span style="color:var(--accent)"> *</span>
+            </label>
             <select id="cf-issueType">
-              <option value="">-- 選択してください --</option>
+              <option value="" data-i18n-opt="selectPlaceholder">-- 選択してください --</option>
               <option>Alarm / Error</option>
               <option>No Operation (Not Running)</option>
               <option>Performance Degradation</option>
@@ -174,44 +666,55 @@
               <option>Software / Firmware Issue</option>
               <option>Unknown</option>
             </select>
-            <span class="error-msg">Issue Type を選択してください</span>
+            <span class="error-msg" data-i18n="errIssueTypeMsg">Issue Type を選択してください</span>
           </div>
 
           <div class="form-group" style="grid-column: 1 / -1;">
-            <label for="cf-issue">Issue <span style="color:var(--accent)">*</span></label>
-            <textarea id="cf-issue" rows="3" placeholder="発生事象を記入してください"></textarea>
-            <span class="error-msg">Issue を入力してください</span>
+            <label for="cf-issue">
+              <span data-i18n="labelIssue">Issue</span>
+              <span style="color:var(--accent)"> *</span>
+            </label>
+            <textarea id="cf-issue" rows="3" placeholder="発生事象を記入してください" data-i18n-ph="phIssue"></textarea>
+            <span class="error-msg" data-i18n="errIssueMsg">Issue を入力してください</span>
           </div>
 
           <div class="form-group" style="grid-column: 1 / -1;">
-            <label for="cf-impact">Impact <span style="color:var(--accent)">*</span></label>
-            <textarea id="cf-impact" rows="3" placeholder="影響を記入してください"></textarea>
-            <span class="error-msg">Impact を入力してください</span>
+            <label for="cf-impact">
+              <span data-i18n="labelImpact">Impact</span>
+              <span style="color:var(--accent)"> *</span>
+            </label>
+            <textarea id="cf-impact" rows="3" placeholder="影響を記入してください" data-i18n-ph="phImpact"></textarea>
+            <span class="error-msg" data-i18n="errImpactMsg">Impact を入力してください</span>
           </div>
 
           <div class="form-group" style="grid-column: 1 / -1;">
-            <label for="cf-response">Response <span style="color:var(--accent)">*</span></label>
-            <textarea id="cf-response" rows="3" placeholder="対応評価を記入してください"></textarea>
-            <span class="error-msg">Response を入力してください</span>
+            <label for="cf-response">
+              <span data-i18n="labelResponse">Response</span>
+              <span style="color:var(--accent)"> *</span>
+            </label>
+            <textarea id="cf-response" rows="3" placeholder="対応評価を記入してください" data-i18n-ph="phResponse"></textarea>
+            <span class="error-msg" data-i18n="errResponseMsg">Response を入力してください</span>
           </div>
 
           <div class="form-group" style="grid-column: 1 / -1;">
-            <label for="cf-request">Request</label>
-            <textarea id="cf-request" rows="3" placeholder="要望（任意）"></textarea>
+            <label for="cf-request">
+              <span data-i18n="labelRequest">Request</span>
+            </label>
+            <textarea id="cf-request" rows="3" placeholder="要望（任意）" data-i18n-ph="phRequest"></textarea>
           </div>
 
         </div>
         <div class="case-form-actions">
-          <button class="btn btn-outline" id="btn-case-cancel" style="display:none;">キャンセル</button>
-          <button class="btn btn-primary" id="btn-case-save">＋ 案件を追加</button>
+          <button class="btn btn-outline" id="btn-case-cancel" style="display:none;" data-i18n="btnCancel">キャンセル</button>
+          <button class="btn btn-primary" id="btn-case-save" data-i18n="btnAddCase">＋ 案件を追加</button>
         </div>
       </div>
 
       <!-- 案件一覧 -->
       <div id="case-list-wrapper" style="margin-top:24px;">
-        <div class="case-list-header">登録済み案件一覧</div>
+        <div class="case-list-header" data-i18n="caseListHeader">登録済み案件一覧</div>
         <div id="cases-list">
-          <p style="color:var(--muted);font-size:13px;padding:12px 0;">案件はまだ登録されていません。</p>
+          <p style="color:var(--muted);font-size:13px;padding:12px 0;" data-i18n="caseListEmpty">案件はまだ登録されていません。</p>
         </div>
       </div>
     </div>
@@ -219,13 +722,13 @@
 
   <!-- ========== 4. アクションバー ========== -->
   <div class="action-bar">
-    <button class="btn btn-outline" id="btn-validate">
+    <button class="btn btn-outline" id="btn-validate" data-i18n="btnValidate">
       🔍 入力チェック
     </button>
-    <button class="btn btn-outline" id="btn-generate-json">
+    <button class="btn btn-outline" id="btn-generate-json" data-i18n="btnGenerateJson">
       📄 JSON 生成
     </button>
-    <button class="btn btn-primary btn-large" id="btn-send">
+    <button class="btn btn-primary btn-large" id="btn-send" data-i18n="btnSend">
       📧 送信（メール作成）
     </button>
   </div>
@@ -234,13 +737,13 @@
   <div id="json-preview-wrapper" class="card" style="display:none;" aria-live="polite">
     <div class="card-header">
       <span class="icon">📄</span>
-      <span>生成 JSON</span>
+      <span data-i18n="jsonPreviewTitle">生成 JSON</span>
     </div>
     <div class="card-body">
       <textarea id="json-preview" rows="20" readonly></textarea>
       <div style="margin-top:10px;display:flex;gap:10px;justify-content:flex-end;">
-        <button class="btn btn-outline" id="btn-copy-json">📋 コピー</button>
-        <button class="btn btn-outline" id="btn-download-json">💾 ダウンロード</button>
+        <button class="btn btn-outline" id="btn-copy-json" data-i18n="btnCopy">📋 コピー</button>
+        <button class="btn btn-outline" id="btn-download-json" data-i18n="btnDownload">💾 ダウンロード</button>
       </div>
     </div>
   </div>
@@ -250,6 +753,824 @@
 <!-- トースト通知 -->
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script src="app.js"></script>
+<script>
+/**
+ * 顧客満足度入力Webアプリ — app.js (inlined)
+ * =====================================================
+ */
+"use strict";
+
+/* ============================================================
+   Language / i18n
+   ============================================================ */
+
+let currentLang = "ja";
+
+const T = {
+  ja: {
+    pageTitle:              "顧客満足度入力フォーム (NC-CSAT)",
+    headerTitle:            "顧客満足度入力フォーム",
+    langBtn:                "EN",
+    validationAlertTitle:   "⚠ 入力エラーがあります",
+    sectionBasic:           "Basic Information",
+    sectionEval:            "Overall Evaluation",
+    sectionCases:           "Case Registration / Case List",
+    scoreTip:               "①～⑦の総合評価を入力してください。5点以外の項目については、下段に根拠案件の登録が必要です。",
+    thNo:                   "No",
+    thScoreItem:            "評価項目",
+    thScore:                "スコア",
+    thScoreHint:            "(1=低い ／ 5=高い)",
+    thEvidence:             "根拠案件",
+    caseTip:                "5点以外の評価項目について、その根拠となる案件を登録してください。各案件は、最も関係の強い評価項目1つに紐づけてください。",
+    newCaseTitle:           "新規案件登録",
+    editCaseSuffix:         "を編集",
+    labelRelatedScoreItem:  "Related Score Item",
+    labelAdditionalItems:   "追加関連評価項目（複数選択可）",
+    labelComponent:         "Component",
+    labelIssueType:         "Issue Type",
+    labelIssue:             "Issue",
+    labelImpact:            "Impact",
+    labelResponse:          "Response",
+    labelRequest:           "Request",
+    phIssue:                "発生事象を記入してください",
+    phImpact:               "影響を記入してください",
+    phResponse:             "対応評価を記入してください",
+    phRequest:              "要望（任意）",
+    btnCancel:              "キャンセル",
+    btnAddCase:             "＋ 案件を追加",
+    btnSaveCase:            "💾 保存",
+    caseListHeader:         "登録済み案件一覧",
+    caseListEmpty:          "案件はまだ登録されていません。",
+    btnValidate:            "🔍 入力チェック",
+    btnGenerateJson:        "📄 JSON 生成",
+    btnSend:                "📧 送信（メール作成）",
+    jsonPreviewTitle:       "生成 JSON",
+    btnCopy:                "📋 コピー",
+    btnDownload:            "💾 ダウンロード",
+    selectPlaceholder:      "-- 選択してください --",
+    btnRevisionUp:          "＋ 修正",
+    scoreNote:              "※ 5以外の評価には根拠案件が必要です",
+    errServiceCenterMsg:    "Service Center を選択してください",
+    errRelatedScoreItemMsg: "Related Score Item を選択してください",
+    errComponentMsg:        "Component を選択してください",
+    errIssueTypeMsg:        "Issue Type を選択してください",
+    errIssueMsg:            "Issue を入力してください",
+    errImpactMsg:           "Impact を入力してください",
+    errResponseMsg:         "Response を入力してください",
+    errServiceCenter:       "Service Center を選択してください。",
+    errScoreUnselected:     "のスコアを選択してください。",
+    errScoreNoCase:         "が %s 点のため、根拠案件を1件以上登録してください。",
+    errRequiredFields:      "⚠ 必須項目を入力してください",
+    toastRevision:          "リビジョンを R%s に更新しました",
+    toastCaseAdded:         "CASE-%s を追加しました",
+    toastCaseUpdated:       "案件を更新しました",
+    toastCaseDeleted:       "案件を削除しました",
+    toastJsonGenerated:     "JSON を生成しました",
+    toastCopied:            "クリップボードにコピーしました",
+    toastCopyFailed:        "コピーに失敗しました",
+    toastDownloaded:        "JSON をダウンロードしました",
+    toastNeedJson:          "先に JSON を生成してください",
+    toastMailLaunching:     "📧 メーラーを起動しています…",
+    toastDataTooLarge:      "⚠️ データが大きいため、JSON をダウンロードしてメール添付をご検討ください",
+    confirmDelete:          "この案件を削除しますか？",
+    colCaseId:              "Case ID",
+    colRelated:             "Related Score Item",
+    colAdditional:          "追加項目",
+    colComponent:           "Component",
+    colIssueType:           "Issue Type",
+    colIssue:               "Issue",
+    colImpact:              "Impact",
+    colResponse:            "Response",
+    colRequest:             "Request",
+    colActions:             "操作",
+    btnEditCase:            "✏ 編集",
+    btnDeleteCase:          "✕ 削除",
+  },
+  en: {
+    pageTitle:              "Customer Satisfaction Form (NC-CSAT)",
+    headerTitle:            "Customer Satisfaction Form",
+    langBtn:                "日本語",
+    validationAlertTitle:   "⚠ Input errors found",
+    sectionBasic:           "Basic Information",
+    sectionEval:            "Overall Evaluation",
+    sectionCases:           "Case Registration / Case List",
+    scoreTip:               "Enter overall scores for ①–⑦. For items other than 5, at least one evidence case must be registered below.",
+    thNo:                   "No",
+    thScoreItem:            "Eval Item",
+    thScore:                "Score",
+    thScoreHint:            "(1=Low / 5=High)",
+    thEvidence:             "Evidence Cases",
+    caseTip:                "Register evidence cases for items scored other than 5. Each case should be linked to the most relevant evaluation item.",
+    newCaseTitle:           "New Case Registration",
+    editCaseSuffix:         "– Edit",
+    labelRelatedScoreItem:  "Related Score Item",
+    labelAdditionalItems:   "Additional Related Items (multi-select)",
+    labelComponent:         "Component",
+    labelIssueType:         "Issue Type",
+    labelIssue:             "Issue",
+    labelImpact:            "Impact",
+    labelResponse:          "Response",
+    labelRequest:           "Request",
+    phIssue:                "Describe the issue",
+    phImpact:               "Describe the impact",
+    phResponse:             "Describe the response/evaluation",
+    phRequest:              "Request (optional)",
+    btnCancel:              "Cancel",
+    btnAddCase:             "+ Add Case",
+    btnSaveCase:            "💾 Save",
+    caseListHeader:         "Registered Cases",
+    caseListEmpty:          "No cases registered yet.",
+    btnValidate:            "🔍 Check Input",
+    btnGenerateJson:        "📄 Generate JSON",
+    btnSend:                "📧 Send (Create Email)",
+    jsonPreviewTitle:       "Generated JSON",
+    btnCopy:                "📋 Copy",
+    btnDownload:            "💾 Download",
+    selectPlaceholder:      "-- Select --",
+    btnRevisionUp:          "+ Revise",
+    scoreNote:              "* Evidence case required for scores other than 5",
+    errServiceCenterMsg:    "Please select Service Center",
+    errRelatedScoreItemMsg: "Please select Related Score Item",
+    errComponentMsg:        "Please select Component",
+    errIssueTypeMsg:        "Please select Issue Type",
+    errIssueMsg:            "Please enter Issue",
+    errImpactMsg:           "Please enter Impact",
+    errResponseMsg:         "Please enter Response",
+    errServiceCenter:       "Please select Service Center.",
+    errScoreUnselected:     ": please select a score.",
+    errScoreNoCase:         ": scored %s — please register at least 1 evidence case.",
+    errRequiredFields:      "⚠ Please fill in all required fields",
+    toastRevision:          "Revision updated to R%s",
+    toastCaseAdded:         "CASE-%s added",
+    toastCaseUpdated:       "Case updated",
+    toastCaseDeleted:       "Case deleted",
+    toastJsonGenerated:     "JSON generated",
+    toastCopied:            "Copied to clipboard",
+    toastCopyFailed:        "Copy failed",
+    toastDownloaded:        "JSON downloaded",
+    toastNeedJson:          "Please generate JSON first",
+    toastMailLaunching:     "📧 Launching email client…",
+    toastDataTooLarge:      "⚠️ Data too large. Please download JSON and attach to email.",
+    confirmDelete:          "Delete this case?",
+    colCaseId:              "Case ID",
+    colRelated:             "Related Score Item",
+    colAdditional:          "Additional Items",
+    colComponent:           "Component",
+    colIssueType:           "Issue Type",
+    colIssue:               "Issue",
+    colImpact:              "Impact",
+    colResponse:            "Response",
+    colRequest:             "Request",
+    colActions:             "Actions",
+    btnEditCase:            "✏ Edit",
+    btnDeleteCase:          "✕ Delete",
+  },
+};
+
+function t(key) {
+  return (T[currentLang] || T["ja"])[key] || T["ja"][key] || key;
+}
+
+/** Template string: replace first %s with each arg in order */
+function tf(key, ...args) {
+  let msg = t(key);
+  args.forEach(a => { msg = msg.replace("%s", a); });
+  return msg;
+}
+
+/** Apply the current language to all data-i18n elements and dynamic parts */
+function applyLang() {
+  document.documentElement.lang = currentLang === "ja" ? "ja" : "en";
+  document.title = t("pageTitle");
+
+  // Static text nodes
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+
+  // Placeholders
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => {
+    el.placeholder = t(el.dataset.i18nPh);
+  });
+
+  // First (empty-value) option in every select
+  document.querySelectorAll("select").forEach(sel => {
+    const empty = sel.querySelector("option[value='']");
+    if (empty) empty.textContent = t("selectPlaceholder");
+  });
+
+  // Language-toggle button label
+  document.getElementById("btn-lang").textContent = t("langBtn");
+
+  // Dynamic selects / checkboxes
+  populateRelatedScoreItemSelect();
+  updateSubItemsVisibility();
+
+  // Re-render dynamic tables (preserving scores / cases)
+  renderEvalTable();
+  renderCaseList();
+}
+
+function toggleLang() {
+  currentLang = currentLang === "ja" ? "en" : "ja";
+  applyLang();
+}
+
+/* ============================================================
+   定数
+   ============================================================ */
+const FIXED = {
+  SURVEY_YEAR:    "2025",
+  FISCAL_HALF:    "2H",
+  MAIL_TO:        "nc-csat@xxxxx.co.jp",
+  MAILTO_MAX_LEN: 8000,
+};
+
+const SCORE_OPTIONS = [5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1];
+
+const EVAL_ITEMS = [
+  { key: "productQualityScore",    ja: "製品品質",          en: "Product Quality",    no: "①" },
+  { key: "generalDefectScore",     ja: "一般不具合発生状況", en: "General Defect",      no: "②" },
+  { key: "initialResponseScore",   ja: "初期対応",           en: "Initial Response",    no: "③" },
+  { key: "correctiveActionScore",  ja: "処置の適正度",       en: "Corrective Action",   no: "④" },
+  { key: "analysisSpeedScore",     ja: "調査報告スピード",   en: "Analysis Speed",      no: "⑤" },
+  { key: "analysisQualityScore",   ja: "調査報告の質",       en: "Analysis Quality",    no: "⑥" },
+  { key: "customerHandlingScore",  ja: "顧客応対",           en: "Customer Handling",   no: "⑦" },
+];
+
+/**
+ * Sub-items available for additional multi-select when:
+ *  ① (productQualityScore) → ③④⑤⑥⑦
+ *  ② (generalDefectScore)  → ⑤⑥⑦
+ */
+const SUB_ITEMS_MAP = {
+  productQualityScore: [
+    "initialResponseScore",
+    "correctiveActionScore",
+    "analysisSpeedScore",
+    "analysisQualityScore",
+    "customerHandlingScore",
+  ],
+  generalDefectScore: [
+    "analysisSpeedScore",
+    "analysisQualityScore",
+    "customerHandlingScore",
+  ],
+};
+
+/* ============================================================
+   状態
+   ============================================================ */
+let state = {
+  surveyId:      "",
+  revision:      1,
+  cases:         [],
+  nextCaseNo:    1,
+  editingCaseId: null,
+};
+
+/* ============================================================
+   ユーティリティ
+   ============================================================ */
+
+function generateSurveyId() {
+  const now = new Date();
+  const pad = (n, w = 2) => String(n).padStart(w, "0");
+  return (
+    String(now.getFullYear()) +
+    pad(now.getMonth() + 1) +
+    pad(now.getDate()) +
+    "-" +
+    pad(now.getHours()) +
+    pad(now.getMinutes()) +
+    pad(now.getSeconds())
+  );
+}
+
+function showToast(msg, duration = 3000) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), duration);
+}
+
+function getScore(key) {
+  const sel = document.getElementById(`score_${key}`);
+  if (!sel || !sel.value) return null;
+  return parseFloat(sel.value);
+}
+
+function formatCaseId(no) {
+  return String(no).padStart(2, "0");
+}
+
+function escHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** Return "①" + label in current language for a given eval-item key */
+function getItemLabel(key) {
+  const item = EVAL_ITEMS.find(i => i.key === key);
+  if (!item) return key;
+  return `${item.no} ${item[currentLang] || item.en}`;
+}
+
+/* ============================================================
+   初期化
+   ============================================================ */
+function init() {
+  state.surveyId = generateSurveyId();
+
+  document.getElementById("surveyID").value   = state.surveyId;
+  document.getElementById("surveyYear").value = FIXED.SURVEY_YEAR;
+  document.getElementById("fiscalHalf").value = FIXED.FISCAL_HALF;
+  document.getElementById("revision").value   = state.revision;
+
+  populateRelatedScoreItemSelect();
+  renderEvalTable();
+
+  document.getElementById("cf-relatedScoreItem").addEventListener("change", updateSubItemsVisibility);
+  document.getElementById("btn-revision-up").addEventListener("click", incrementRevision);
+  document.getElementById("btn-case-save").addEventListener("click", saveCase);
+  document.getElementById("btn-case-cancel").addEventListener("click", cancelEdit);
+  document.getElementById("btn-validate").addEventListener("click", () => validate(true));
+  document.getElementById("btn-generate-json").addEventListener("click", generateJSON);
+  document.getElementById("btn-send").addEventListener("click", sendMail);
+  document.getElementById("btn-copy-json").addEventListener("click", copyJSON);
+  document.getElementById("btn-download-json").addEventListener("click", downloadJSON);
+}
+
+/* ============================================================
+   Related Score Item セレクト（言語対応）
+   ============================================================ */
+function populateRelatedScoreItemSelect() {
+  const sel = document.getElementById("cf-relatedScoreItem");
+  const saved = sel.value;
+  sel.innerHTML = `<option value="">${t("selectPlaceholder")}</option>`;
+  EVAL_ITEMS.forEach(item => {
+    const opt = document.createElement("option");
+    opt.value = item.key;
+    opt.textContent = `${item.no} ${item[currentLang] || item.en}`;
+    sel.appendChild(opt);
+  });
+  sel.value = saved;
+}
+
+/* ============================================================
+   Sub-items（追加関連評価項目）表示制御
+   ============================================================ */
+function getCheckedSubItems() {
+  return Array.from(
+    document.querySelectorAll("input[name='cf-subItem']:checked")
+  ).map(cb => cb.value);
+}
+
+function updateSubItemsVisibility(preChecked) {
+  const primaryVal  = document.getElementById("cf-relatedScoreItem").value;
+  const wrapper     = document.getElementById("cf-subItems-group");
+  const checkboxDiv = document.getElementById("cf-subItems-checkboxes");
+  const subKeys     = SUB_ITEMS_MAP[primaryVal];
+
+  // Preserve currently checked items (or use explicitly passed array when editing)
+  const checked = Array.isArray(preChecked) ? preChecked : getCheckedSubItems();
+
+  if (subKeys) {
+    checkboxDiv.innerHTML = subKeys.map(key => {
+      const item      = EVAL_ITEMS.find(i => i.key === key);
+      const label     = item ? `${item.no} ${item[currentLang] || item.en}` : key;
+      const isChecked = checked.includes(key) ? " checked" : "";
+      return `<label class="checkbox-label"><input type="checkbox" name="cf-subItem" value="${escHtml(key)}"${isChecked}> ${escHtml(label)}</label>`;
+    }).join("");
+    wrapper.style.display = "";
+  } else {
+    checkboxDiv.innerHTML = "";
+    wrapper.style.display = "none";
+  }
+}
+
+/* ============================================================
+   総合評価テーブル
+   ============================================================ */
+function renderEvalTable() {
+  // Preserve scores entered before re-render
+  const savedScores = {};
+  EVAL_ITEMS.forEach(item => {
+    const sel = document.getElementById(`score_${item.key}`);
+    if (sel) savedScores[item.key] = sel.value;
+  });
+
+  const tbody = document.getElementById("eval-tbody");
+  tbody.innerHTML = "";
+
+  EVAL_ITEMS.forEach(item => {
+    const tr = document.createElement("tr");
+    tr.id = `eval-row-${item.key}`;
+
+    const scoreOptions = SCORE_OPTIONS
+      .map(v => `<option value="${v}">${v}</option>`)
+      .join("");
+
+    const itemLabel = item[currentLang] || item.en;
+
+    tr.innerHTML = `
+      <td style="font-weight:700;text-align:center;">${item.no}</td>
+      <td style="font-weight:600;">${escHtml(itemLabel)}</td>
+      <td>
+        <select id="score_${item.key}" class="score-select" aria-label="${escHtml(itemLabel)}">
+          <option value="">${t("selectPlaceholder")}</option>
+          ${scoreOptions}
+        </select>
+        <div class="required-cases-note" id="scoreNote_${item.key}" style="display:none;">
+          ${escHtml(t("scoreNote"))}
+        </div>
+      </td>
+      <td>
+        <div class="case-tags" id="caseTags_${item.key}"></div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    const scoreEl = document.getElementById(`score_${item.key}`);
+    if (savedScores[item.key]) scoreEl.value = savedScores[item.key];
+
+    scoreEl.addEventListener("change", () => {
+      updateScoreNote(item.key);
+      refreshCaseTags();
+    });
+
+    updateScoreNote(item.key);
+  });
+
+  refreshCaseTags();
+}
+
+function updateScoreNote(key) {
+  const score = getScore(key);
+  const note  = document.getElementById(`scoreNote_${key}`);
+  if (note) {
+    note.style.display = (score !== null && score !== 5) ? "block" : "none";
+  }
+}
+
+/** Show case tags for every item a case is linked to (primary + additional) */
+function refreshCaseTags() {
+  EVAL_ITEMS.forEach(item => {
+    const tagsDiv = document.getElementById(`caseTags_${item.key}`);
+    if (!tagsDiv) return;
+    tagsDiv.innerHTML = "";
+    state.cases
+      .filter(c =>
+        c.relatedScoreItem === item.key ||
+        (c.additionalScoreItems && c.additionalScoreItems.includes(item.key))
+      )
+      .forEach(c => {
+        const tag = document.createElement("span");
+        tag.className = "case-tag";
+        tag.textContent = `CASE-${formatCaseId(c.id)}`;
+        tagsDiv.appendChild(tag);
+      });
+  });
+}
+
+/* ============================================================
+   案件管理
+   ============================================================ */
+
+function clearCaseForm() {
+  ["cf-relatedScoreItem", "cf-component", "cf-issueType"].forEach(id => {
+    document.getElementById(id).value = "";
+    document.getElementById(id).closest(".form-group").classList.remove("has-error");
+  });
+  ["cf-issue", "cf-impact", "cf-response", "cf-request"].forEach(id => {
+    document.getElementById(id).value = "";
+    document.getElementById(id).closest(".form-group").classList.remove("has-error");
+  });
+  // Clear sub-items checkboxes and hide section
+  document.getElementById("cf-subItems-checkboxes").innerHTML = "";
+  document.getElementById("cf-subItems-group").style.display = "none";
+}
+
+function getCaseFormData() {
+  return {
+    relatedScoreItem:     document.getElementById("cf-relatedScoreItem").value,
+    additionalScoreItems: getCheckedSubItems(),
+    component:            document.getElementById("cf-component").value,
+    issueType:            document.getElementById("cf-issueType").value,
+    issue:                document.getElementById("cf-issue").value.trim(),
+    impact:               document.getElementById("cf-impact").value.trim(),
+    response:             document.getElementById("cf-response").value.trim(),
+    request:              document.getElementById("cf-request").value.trim(),
+  };
+}
+
+function validateCaseForm(data) {
+  let valid = true;
+  const required = [
+    { id: "cf-relatedScoreItem", value: data.relatedScoreItem },
+    { id: "cf-component",        value: data.component },
+    { id: "cf-issueType",        value: data.issueType },
+    { id: "cf-issue",            value: data.issue },
+    { id: "cf-impact",           value: data.impact },
+    { id: "cf-response",         value: data.response },
+  ];
+  required.forEach(f => {
+    const group = document.getElementById(f.id).closest(".form-group");
+    if (!f.value) {
+      group.classList.add("has-error");
+      valid = false;
+    } else {
+      group.classList.remove("has-error");
+    }
+  });
+  return valid;
+}
+
+function saveCase() {
+  const data = getCaseFormData();
+  if (!validateCaseForm(data)) {
+    showToast(t("errRequiredFields"));
+    return;
+  }
+
+  if (state.editingCaseId !== null) {
+    const c = state.cases.find(x => x.id === state.editingCaseId);
+    if (c) Object.assign(c, data);
+    state.editingCaseId = null;
+    document.getElementById("case-form-title").textContent = t("newCaseTitle");
+    document.getElementById("btn-case-save").textContent   = t("btnAddCase");
+    document.getElementById("btn-case-cancel").style.display = "none";
+    showToast(t("toastCaseUpdated"));
+  } else {
+    const caseNo = state.nextCaseNo++;
+    state.cases.push({ id: caseNo, ...data });
+    showToast(tf("toastCaseAdded", formatCaseId(caseNo)));
+  }
+
+  clearCaseForm();
+  renderCaseList();
+  refreshCaseTags();
+}
+
+function editCase(id) {
+  const c = state.cases.find(x => x.id === id);
+  if (!c) return;
+  state.editingCaseId = id;
+
+  document.getElementById("cf-relatedScoreItem").value = c.relatedScoreItem;
+  document.getElementById("cf-component").value        = c.component;
+  document.getElementById("cf-issueType").value        = c.issueType;
+  document.getElementById("cf-issue").value            = c.issue;
+  document.getElementById("cf-impact").value           = c.impact;
+  document.getElementById("cf-response").value         = c.response;
+  document.getElementById("cf-request").value          = c.request;
+
+  // Restore sub-items checkboxes with previously saved selection
+  updateSubItemsVisibility(c.additionalScoreItems || []);
+
+  document.getElementById("case-form-title").textContent  = `CASE-${formatCaseId(c.id)} ${t("editCaseSuffix")}`;
+  document.getElementById("btn-case-save").textContent    = t("btnSaveCase");
+  document.getElementById("btn-case-cancel").style.display = "";
+
+  document.querySelector(".case-form").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function cancelEdit() {
+  state.editingCaseId = null;
+  clearCaseForm();
+  document.getElementById("case-form-title").textContent  = t("newCaseTitle");
+  document.getElementById("btn-case-save").textContent    = t("btnAddCase");
+  document.getElementById("btn-case-cancel").style.display = "none";
+}
+
+function removeCase(id) {
+  if (!confirm(t("confirmDelete"))) return;
+  state.cases = state.cases.filter(c => c.id !== id);
+  if (state.editingCaseId === id) cancelEdit();
+  renderCaseList();
+  refreshCaseTags();
+  showToast(t("toastCaseDeleted"));
+}
+
+function renderCaseList() {
+  const container = document.getElementById("cases-list");
+
+  if (state.cases.length === 0) {
+    container.innerHTML = `<p style="color:var(--muted);font-size:13px;padding:12px 0;">${escHtml(t("caseListEmpty"))}</p>`;
+    return;
+  }
+
+  const table = document.createElement("table");
+  table.className = "case-list-table";
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>${escHtml(t("colCaseId"))}</th>
+        <th>${escHtml(t("colRelated"))}</th>
+        <th>${escHtml(t("colAdditional"))}</th>
+        <th>${escHtml(t("colComponent"))}</th>
+        <th>${escHtml(t("colIssueType"))}</th>
+        <th>${escHtml(t("colIssue"))}</th>
+        <th>${escHtml(t("colImpact"))}</th>
+        <th>${escHtml(t("colResponse"))}</th>
+        <th>${escHtml(t("colRequest"))}</th>
+        <th>${escHtml(t("colActions"))}</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  `;
+
+  const tbody = table.querySelector("tbody");
+  state.cases.forEach(c => {
+    const additionalLabels = (c.additionalScoreItems || [])
+      .map(key => getItemLabel(key))
+      .join(", ");
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>CASE-${formatCaseId(c.id)}</strong></td>
+      <td>${escHtml(getItemLabel(c.relatedScoreItem))}</td>
+      <td class="cell-wrap">${escHtml(additionalLabels)}</td>
+      <td>${escHtml(c.component)}</td>
+      <td>${escHtml(c.issueType)}</td>
+      <td class="cell-wrap">${escHtml(c.issue)}</td>
+      <td class="cell-wrap">${escHtml(c.impact)}</td>
+      <td class="cell-wrap">${escHtml(c.response)}</td>
+      <td class="cell-wrap">${escHtml(c.request)}</td>
+      <td class="cell-actions">
+        <button class="btn btn-outline btn-sm" onclick="editCase(${c.id})">${escHtml(t("btnEditCase"))}</button>
+        <button class="btn btn-danger btn-sm" onclick="removeCase(${c.id})">${escHtml(t("btnDeleteCase"))}</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  container.innerHTML = "";
+  container.appendChild(table);
+}
+
+/* ============================================================
+   Revision
+   ============================================================ */
+function incrementRevision() {
+  state.revision++;
+  document.getElementById("revision").value = state.revision;
+  showToast(tf("toastRevision", state.revision));
+}
+
+/* ============================================================
+   バリデーション
+   ============================================================ */
+function validate(showAlert = false) {
+  const errors = [];
+
+  const sc = document.getElementById("serviceCenter").value;
+  if (!sc) {
+    errors.push(t("errServiceCenter"));
+    document.getElementById("serviceCenter").closest(".form-group").classList.add("has-error");
+  } else {
+    document.getElementById("serviceCenter").closest(".form-group").classList.remove("has-error");
+  }
+
+  EVAL_ITEMS.forEach(item => {
+    const score = getScore(item.key);
+    const row   = document.getElementById(`eval-row-${item.key}`);
+    if (score === null) {
+      errors.push(`${item.no}「${item[currentLang] || item.en}」${t("errScoreUnselected")}`);
+      if (row) row.classList.add("has-error-row");
+    } else {
+      if (row) row.classList.remove("has-error-row");
+      if (score !== 5) {
+        const linked = state.cases.filter(c =>
+          c.relatedScoreItem === item.key ||
+          (c.additionalScoreItems && c.additionalScoreItems.includes(item.key))
+        );
+        if (linked.length === 0) {
+          errors.push(
+            `${item.no}「${item[currentLang] || item.en}」${tf("errScoreNoCase", score)}`
+          );
+        }
+      }
+    }
+  });
+
+  const alertEl   = document.getElementById("validation-alert");
+  const alertList = document.getElementById("validation-errors");
+  if (errors.length > 0) {
+    alertList.innerHTML = errors.map(e => `<li>${escHtml(e)}</li>`).join("");
+    alertEl.classList.add("show");
+    if (showAlert) alertEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } else {
+    alertEl.classList.remove("show");
+  }
+
+  return errors.length === 0;
+}
+
+/* ============================================================
+   JSON 生成
+   ============================================================ */
+function buildJSON() {
+  const sc = document.getElementById("serviceCenter").value;
+
+  const overallEvaluation = {};
+  EVAL_ITEMS.forEach(item => {
+    overallEvaluation[item.key] = getScore(item.key);
+  });
+
+  const cases = state.cases.map(c => {
+    const obj = {
+      caseId:           formatCaseId(c.id),
+      relatedScoreItem: c.relatedScoreItem,
+    };
+    if (c.additionalScoreItems && c.additionalScoreItems.length > 0) {
+      obj.additionalScoreItems = c.additionalScoreItems;
+    }
+    obj.component  = c.component;
+    obj.issueType  = c.issueType;
+    obj.issue      = c.issue;
+    obj.impact     = c.impact;
+    obj.response   = c.response;
+    if (c.request) obj.request = c.request;
+    return obj;
+  });
+
+  return {
+    serviceCenter:     sc,
+    surveyYear:        FIXED.SURVEY_YEAR,
+    fiscalHalf:        FIXED.FISCAL_HALF,
+    surveyId:          state.surveyId,
+    revision:          state.revision,
+    overallEvaluation: overallEvaluation,
+    cases:             cases,
+  };
+}
+
+function generateJSON() {
+  const data    = buildJSON();
+  const jsonStr = JSON.stringify(data, null, 2);
+  const wrapper = document.getElementById("json-preview-wrapper");
+  document.getElementById("json-preview").value = jsonStr;
+  wrapper.style.display = "";
+  wrapper.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  showToast(t("toastJsonGenerated"));
+}
+
+function copyJSON() {
+  const text = document.getElementById("json-preview").value;
+  if (!text) { showToast(t("toastNeedJson")); return; }
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(t("toastCopied"));
+  }).catch(() => {
+    showToast(t("toastCopyFailed"));
+  });
+}
+
+function downloadJSON() {
+  const text = document.getElementById("json-preview").value;
+  if (!text) { showToast(t("toastNeedJson")); return; }
+  const blob = new Blob([text], { type: "application/json" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.download = `nc-csat_${state.surveyId.replace(/[^0-9A-Za-z\-]/g, "_")}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(t("toastDownloaded"));
+}
+
+/* ============================================================
+   送信（mailto）
+   ============================================================ */
+function sendMail() {
+  if (!validate(true)) return;
+
+  const data     = buildJSON();
+  const subject  = `[NC-CSAT] ${state.surveyId} ${data.serviceCenter}`;
+  const bodyText = JSON.stringify(data, null, 2);
+
+  const mailto =
+    `mailto:${FIXED.MAIL_TO}` +
+    `?subject=${encodeURIComponent(subject)}` +
+    `&body=${encodeURIComponent(bodyText)}`;
+
+  if (mailto.length > FIXED.MAILTO_MAX_LEN) {
+    showToast(t("toastDataTooLarge"), 6000);
+    generateJSON();
+    return;
+  }
+
+  window.location.href = mailto;
+  showToast(t("toastMailLaunching"));
+}
+
+/* ============================================================
+   エントリーポイント
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", init);
+</script>
 </body>
 </html>
