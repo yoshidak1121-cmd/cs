@@ -22,7 +22,11 @@ const FIXED = {
   MAILTO_MAX_LEN:   8000,  // mailto URI の一般的な最大長目安
 };
 
-const SCORE_OPTIONS = [5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1];
+const SCORE_OPTIONS = (() => {
+  const raw = [5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1];
+  const avg = raw.length ? raw.reduce((s, v) => s + v, 0) / raw.length : 1;
+  return raw.map(v => parseFloat((v / avg).toFixed(4)));
+})();
 
 const EVAL_ITEMS = [
   { key: "productQualityScore",    label: "製品品質",          no: "①" },
