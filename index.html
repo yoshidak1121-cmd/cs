@@ -927,11 +927,10 @@ function t(key) {
   return (T[currentLang] || T["ja"])[key] || T["ja"][key] || key;
 }
 
-/** Template string: replace first %s with each arg in order */
+/** Template string: replace each %s placeholder with the corresponding arg in order */
 function tf(key, ...args) {
-  let msg = t(key);
-  args.forEach(a => { msg = msg.replace("%s", a); });
-  return msg;
+  let i = 0;
+  return t(key).replace(/%s/g, () => (i < args.length ? args[i++] : "%s"));
 }
 
 /** Apply the current language to all data-i18n elements and dynamic parts */

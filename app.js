@@ -3,8 +3,10 @@
  * =====================================================
  * 機能:
  *  - SurveyID の自動生成（YYYYMMDD-HHMMSS）
+ *  - 多言語対応（日本語 / 英語）
  *  - 総合評価スコア（7項目 / 半点刻み 1〜5）の入力
  *  - 案件（ケース）の追加・編集・削除
+ *  - 関連評価項目の複数選択（チェックボックス）
  *  - 入力整合性チェック（整合バリデーション含む）
  *  - JSON 生成・コピー・ダウンロード
  *  - メール作成（mailto）
@@ -13,36 +15,241 @@
 "use strict";
 
 /* ============================================================
+   Language / i18n
+   ============================================================ */
+
+let currentLang = "ja";
+
+const T = {
+  ja: {
+    pageTitle:              "顧客満足度入力フォーム (NC-CSAT)",
+    headerTitle:            "顧客満足度入力フォーム",
+    langBtn:                "EN",
+    validationAlertTitle:   "⚠ 入力エラーがあります",
+    sectionBasic:           "Basic Information",
+    sectionEval:            "Overall Evaluation",
+    sectionCases:           "Case Registration / Case List",
+    scoreTip:               "①～⑦の総合評価を入力してください。5点以外の項目については、下段に根拠案件の登録が必要です。",
+    thNo:                   "No",
+    thScoreItem:            "評価項目",
+    thScore:                "スコア",
+    thScoreHint:            "(1=低い ／ 5=高い)",
+    thEvidence:             "根拠案件",
+    caseTip:                "5点以外の評価項目について、その根拠となる案件を登録してください。各案件は、最も関係の強い評価項目1つに紐づけてください。",
+    newCaseTitle:           "新規案件登録",
+    editCaseSuffix:         "を編集",
+    labelRelatedScoreItem:  "Related Score Item",
+    labelAdditionalItems:   "追加関連評価項目（複数選択可）",
+    labelComponent:         "Component",
+    labelIssueType:         "Issue Type",
+    labelIssue:             "Issue",
+    labelImpact:            "Impact",
+    labelResponse:          "Response",
+    labelRequest:           "Request",
+    phIssue:                "発生事象を記入してください",
+    phImpact:               "影響を記入してください",
+    phResponse:             "対応評価を記入してください",
+    phRequest:              "要望（任意）",
+    btnCancel:              "キャンセル",
+    btnAddCase:             "＋ 案件を追加",
+    btnSaveCase:            "💾 保存",
+    caseListHeader:         "登録済み案件一覧",
+    caseListEmpty:          "案件はまだ登録されていません。",
+    btnValidate:            "🔍 入力チェック",
+    btnGenerateJson:        "📄 JSON 生成",
+    btnSend:                "📧 送信（メール作成）",
+    jsonPreviewTitle:       "生成 JSON",
+    btnCopy:                "📋 コピー",
+    btnDownload:            "💾 ダウンロード",
+    selectPlaceholder:      "-- 選択してください --",
+    btnRevisionUp:          "＋ 修正",
+    scoreNote:              "※ 5以外の評価には根拠案件が必要です",
+    errServiceCenterMsg:    "Service Center を選択してください",
+    errRelatedScoreItemMsg: "Related Score Item を選択してください",
+    errComponentMsg:        "Component を選択してください",
+    errIssueTypeMsg:        "Issue Type を選択してください",
+    errIssueMsg:            "Issue を入力してください",
+    errImpactMsg:           "Impact を入力してください",
+    errResponseMsg:         "Response を入力してください",
+    errServiceCenter:       "Service Center を選択してください。",
+    errScoreUnselected:     "のスコアを選択してください。",
+    errScoreNoCase:         "が %s 点のため、根拠案件を1件以上登録してください。",
+    errRequiredFields:      "⚠ 必須項目を入力してください",
+    toastRevision:          "リビジョンを R%s に更新しました",
+    toastCaseAdded:         "CASE-%s を追加しました",
+    toastCaseUpdated:       "案件を更新しました",
+    toastCaseDeleted:       "案件を削除しました",
+    toastJsonGenerated:     "JSON を生成しました",
+    toastCopied:            "クリップボードにコピーしました",
+    toastCopyFailed:        "コピーに失敗しました",
+    toastDownloaded:        "JSON をダウンロードしました",
+    toastNeedJson:          "先に JSON を生成してください",
+    toastMailLaunching:     "📧 メーラーを起動しています…",
+    toastDataTooLarge:      "⚠️ データが大きいため、JSON をダウンロードしてメール添付をご検討ください",
+    confirmDelete:          "この案件を削除しますか？",
+    colCaseId:              "Case ID",
+    colRelated:             "Related Score Item",
+    colAdditional:          "追加項目",
+    colComponent:           "Component",
+    colIssueType:           "Issue Type",
+    colIssue:               "Issue",
+    colImpact:              "Impact",
+    colResponse:            "Response",
+    colRequest:             "Request",
+    colActions:             "操作",
+    btnEditCase:            "✏ 編集",
+    btnDeleteCase:          "✕ 削除",
+  },
+  en: {
+    pageTitle:              "Customer Satisfaction Form (NC-CSAT)",
+    headerTitle:            "Customer Satisfaction Form",
+    langBtn:                "日本語",
+    validationAlertTitle:   "⚠ Input errors found",
+    sectionBasic:           "Basic Information",
+    sectionEval:            "Overall Evaluation",
+    sectionCases:           "Case Registration / Case List",
+    scoreTip:               "Enter overall scores for ①–⑦. For items other than 5, at least one evidence case must be registered below.",
+    thNo:                   "No",
+    thScoreItem:            "Eval Item",
+    thScore:                "Score",
+    thScoreHint:            "(1=Low / 5=High)",
+    thEvidence:             "Evidence Cases",
+    caseTip:                "Register evidence cases for items scored other than 5. Each case should be linked to the most relevant evaluation item.",
+    newCaseTitle:           "New Case Registration",
+    editCaseSuffix:         "– Edit",
+    labelRelatedScoreItem:  "Related Score Item",
+    labelAdditionalItems:   "Additional Related Items (multi-select)",
+    labelComponent:         "Component",
+    labelIssueType:         "Issue Type",
+    labelIssue:             "Issue",
+    labelImpact:            "Impact",
+    labelResponse:          "Response",
+    labelRequest:           "Request",
+    phIssue:                "Describe the issue",
+    phImpact:               "Describe the impact",
+    phResponse:             "Describe the response/evaluation",
+    phRequest:              "Request (optional)",
+    btnCancel:              "Cancel",
+    btnAddCase:             "+ Add Case",
+    btnSaveCase:            "💾 Save",
+    caseListHeader:         "Registered Cases",
+    caseListEmpty:          "No cases registered yet.",
+    btnValidate:            "🔍 Check Input",
+    btnGenerateJson:        "📄 Generate JSON",
+    btnSend:                "📧 Send (Create Email)",
+    jsonPreviewTitle:       "Generated JSON",
+    btnCopy:                "📋 Copy",
+    btnDownload:            "💾 Download",
+    selectPlaceholder:      "-- Select --",
+    btnRevisionUp:          "+ Revise",
+    scoreNote:              "* Evidence case required for scores other than 5",
+    errServiceCenterMsg:    "Please select Service Center",
+    errRelatedScoreItemMsg: "Please select Related Score Item",
+    errComponentMsg:        "Please select Component",
+    errIssueTypeMsg:        "Please select Issue Type",
+    errIssueMsg:            "Please enter Issue",
+    errImpactMsg:           "Please enter Impact",
+    errResponseMsg:         "Please enter Response",
+    errServiceCenter:       "Please select Service Center.",
+    errScoreUnselected:     ": please select a score.",
+    errScoreNoCase:         ": scored %s — please register at least 1 evidence case.",
+    errRequiredFields:      "⚠ Please fill in all required fields",
+    toastRevision:          "Revision updated to R%s",
+    toastCaseAdded:         "CASE-%s added",
+    toastCaseUpdated:       "Case updated",
+    toastCaseDeleted:       "Case deleted",
+    toastJsonGenerated:     "JSON generated",
+    toastCopied:            "Copied to clipboard",
+    toastCopyFailed:        "Copy failed",
+    toastDownloaded:        "JSON downloaded",
+    toastNeedJson:          "Please generate JSON first",
+    toastMailLaunching:     "📧 Launching email client…",
+    toastDataTooLarge:      "⚠️ Data too large. Please download JSON and attach to email.",
+    confirmDelete:          "Delete this case?",
+    colCaseId:              "Case ID",
+    colRelated:             "Related Score Item",
+    colAdditional:          "Additional Items",
+    colComponent:           "Component",
+    colIssueType:           "Issue Type",
+    colIssue:               "Issue",
+    colImpact:              "Impact",
+    colResponse:            "Response",
+    colRequest:             "Request",
+    colActions:             "Actions",
+    btnEditCase:            "✏ Edit",
+    btnDeleteCase:          "✕ Delete",
+  },
+};
+
+function t(key) {
+  return (T[currentLang] || T["ja"])[key] || T["ja"][key] || key;
+}
+
+/** Template string: replace each %s placeholder with the corresponding arg in order */
+function tf(key, ...args) {
+  let i = 0;
+  return t(key).replace(/%s/g, () => (i < args.length ? args[i++] : "%s"));
+}
+
+/** Apply the current language to all data-i18n elements and dynamic parts */
+function applyLang() {
+  document.documentElement.lang = currentLang === "ja" ? "ja" : "en";
+  document.title = t("pageTitle");
+
+  // Static text nodes
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+
+  // Placeholders
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => {
+    el.placeholder = t(el.dataset.i18nPh);
+  });
+
+  // First (empty-value) option in every select
+  document.querySelectorAll("select").forEach(sel => {
+    const empty = sel.querySelector("option[value='']");
+    if (empty) empty.textContent = t("selectPlaceholder");
+  });
+
+  // Language-toggle button label
+  document.getElementById("btn-lang").textContent = t("langBtn");
+
+  // Dynamic selects / checkboxes
+  populateRelatedScoreItemCheckboxes();
+
+  // Re-render dynamic tables (preserving scores / cases)
+  renderEvalTable();
+  renderCaseList();
+}
+
+function toggleLang() {
+  currentLang = currentLang === "ja" ? "en" : "ja";
+  applyLang();
+}
+
+/* ============================================================
    定数
    ============================================================ */
 const FIXED = {
-  SURVEY_YEAR:      "2025",
-  FISCAL_HALF:      "2H",
-  MAIL_TO:          "nc-csat@xxxxx.co.jp",
-  MAILTO_MAX_LEN:   8000,  // mailto URI の一般的な最大長目安
+  SURVEY_YEAR:    "2025",
+  FISCAL_HALF:    "2H",
+  MAIL_TO:        "nc-csat@xxxxx.co.jp",
+  MAILTO_MAX_LEN: 8000,
 };
 
 const SCORE_OPTIONS = [5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1];
 
 const EVAL_ITEMS = [
-  { key: "productQualityScore",    label: "製品品質",          no: "①" },
-  { key: "generalDefectScore",     label: "一般不具合発生状況", no: "②" },
-  { key: "initialResponseScore",   label: "初期対応",           no: "③" },
-  { key: "correctiveActionScore",  label: "処置の適正度",       no: "④" },
-  { key: "analysisSpeedScore",     label: "調査報告スピード",   no: "⑤" },
-  { key: "analysisQualityScore",   label: "調査報告の質",       no: "⑥" },
-  { key: "customerHandlingScore",  label: "顧客応対",           no: "⑦" },
+  { key: "productQualityScore",    ja: "製品品質",          en: "Product Quality",    no: "①" },
+  { key: "generalDefectScore",     ja: "一般不具合発生状況", en: "General Defect",      no: "②" },
+  { key: "initialResponseScore",   ja: "初期対応",           en: "Initial Response",    no: "③" },
+  { key: "correctiveActionScore",  ja: "処置の適正度",       en: "Corrective Action",   no: "④" },
+  { key: "analysisSpeedScore",     ja: "調査報告スピード",   en: "Analysis Speed",      no: "⑤" },
+  { key: "analysisQualityScore",   ja: "調査報告の質",       en: "Analysis Quality",    no: "⑥" },
+  { key: "customerHandlingScore",  ja: "顧客応対",           en: "Customer Handling",   no: "⑦" },
 ];
 
-const SCORE_ITEM_LABELS = {
-  productQualityScore:   "Product Quality",
-  generalDefectScore:    "General Defect",
-  initialResponseScore:  "Initial Response",
-  correctiveActionScore: "Corrective Action",
-  analysisSpeedScore:    "Analysis Speed",
-  analysisQualityScore:  "Analysis Quality",
-  customerHandlingScore: "Customer Handling",
-};
 
 /* ============================================================
    状態
@@ -59,7 +266,6 @@ let state = {
    ユーティリティ
    ============================================================ */
 
-/** タイムスタンプ形式のSurveyIDを生成する */
 function generateSurveyId() {
   const now = new Date();
   const pad = (n, w = 2) => String(n).padStart(w, "0");
@@ -74,7 +280,6 @@ function generateSurveyId() {
   );
 }
 
-/** トースト通知を表示する */
 function showToast(msg, duration = 3000) {
   const el = document.getElementById("toast");
   el.textContent = msg;
@@ -82,25 +287,29 @@ function showToast(msg, duration = 3000) {
   setTimeout(() => el.classList.remove("show"), duration);
 }
 
-/** 評価項目キーからスコア値（数値 or null）を取得する */
 function getScore(key) {
   const sel = document.getElementById(`score_${key}`);
   if (!sel || !sel.value) return null;
   return parseFloat(sel.value);
 }
 
-/** ケース番号を2桁ゼロ埋め文字列に変換する */
 function formatCaseId(no) {
   return String(no).padStart(2, "0");
 }
 
-/** HTML エスケープ */
 function escHtml(str) {
   return String(str || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/** Return "①" + label in current language for a given eval-item key */
+function getItemLabel(key) {
+  const item = EVAL_ITEMS.find(i => i.key === key);
+  if (!item) return key;
+  return `${item.no} ${item[currentLang] || item.en}`;
 }
 
 /* ============================================================
@@ -114,6 +323,7 @@ function init() {
   document.getElementById("fiscalHalf").value = FIXED.FISCAL_HALF;
   document.getElementById("revision").value   = state.revision;
 
+  populateRelatedScoreItemCheckboxes();
   renderEvalTable();
 
   document.getElementById("btn-revision-up").addEventListener("click", incrementRevision);
@@ -127,9 +337,35 @@ function init() {
 }
 
 /* ============================================================
+   Related Score Item チェックボックス（言語対応）
+   ============================================================ */
+function populateRelatedScoreItemCheckboxes() {
+  const container = document.getElementById("cf-relatedScoreItems-checkboxes");
+  const checked = getCheckedRelatedItems();
+  container.innerHTML = EVAL_ITEMS.map(item => {
+    const label     = `${item.no} ${item[currentLang] || item.en}`;
+    const isChecked = checked.includes(item.key) ? " checked" : "";
+    return `<label class="checkbox-label"><input type="checkbox" name="cf-relatedItem" value="${escHtml(item.key)}"${isChecked}> ${escHtml(label)}</label>`;
+  }).join("");
+}
+
+function getCheckedRelatedItems() {
+  return Array.from(
+    document.querySelectorAll("input[name='cf-relatedItem']:checked")
+  ).map(cb => cb.value);
+}
+
+/* ============================================================
    総合評価テーブル
    ============================================================ */
 function renderEvalTable() {
+  // Preserve scores entered before re-render
+  const savedScores = {};
+  EVAL_ITEMS.forEach(item => {
+    const sel = document.getElementById(`score_${item.key}`);
+    if (sel) savedScores[item.key] = sel.value;
+  });
+
   const tbody = document.getElementById("eval-tbody");
   tbody.innerHTML = "";
 
@@ -141,16 +377,18 @@ function renderEvalTable() {
       .map(v => `<option value="${v}">${v}</option>`)
       .join("");
 
+    const itemLabel = item[currentLang] || item.en;
+
     tr.innerHTML = `
       <td style="font-weight:700;text-align:center;">${item.no}</td>
-      <td style="font-weight:600;">${item.label}</td>
+      <td style="font-weight:600;">${escHtml(itemLabel)}</td>
       <td>
-        <select id="score_${item.key}" class="score-select" aria-label="${item.label} スコア">
-          <option value="">-- 選択 --</option>
+        <select id="score_${item.key}" class="score-select" aria-label="${escHtml(itemLabel)}">
+          <option value="">${t("selectPlaceholder")}</option>
           ${scoreOptions}
         </select>
         <div class="required-cases-note" id="scoreNote_${item.key}" style="display:none;">
-          ※ 5以外の評価には根拠案件が必要です
+          ${escHtml(t("scoreNote"))}
         </div>
       </td>
       <td>
@@ -159,14 +397,20 @@ function renderEvalTable() {
     `;
     tbody.appendChild(tr);
 
-    document.getElementById(`score_${item.key}`).addEventListener("change", () => {
+    const scoreEl = document.getElementById(`score_${item.key}`);
+    if (savedScores[item.key]) scoreEl.value = savedScores[item.key];
+
+    scoreEl.addEventListener("change", () => {
       updateScoreNote(item.key);
       refreshCaseTags();
     });
+
+    updateScoreNote(item.key);
   });
+
+  refreshCaseTags();
 }
 
-/** スコア注記と行強調を更新する */
 function updateScoreNote(key) {
   const score = getScore(key);
   const note  = document.getElementById(`scoreNote_${key}`);
@@ -175,14 +419,17 @@ function updateScoreNote(key) {
   }
 }
 
-/** 評価テーブルの根拠案件タグを更新する */
+/** Show case tags for every item a case is linked to (primary + additional) */
 function refreshCaseTags() {
   EVAL_ITEMS.forEach(item => {
     const tagsDiv = document.getElementById(`caseTags_${item.key}`);
     if (!tagsDiv) return;
     tagsDiv.innerHTML = "";
     state.cases
-      .filter(c => c.relatedScoreItem === item.key)
+      .filter(c =>
+        c.relatedScoreItem === item.key ||
+        (c.additionalScoreItems && c.additionalScoreItems.includes(item.key))
+      )
       .forEach(c => {
         const tag = document.createElement("span");
         tag.className = "case-tag";
@@ -196,9 +443,8 @@ function refreshCaseTags() {
    案件管理
    ============================================================ */
 
-/** 案件フォームをクリアする */
 function clearCaseForm() {
-  ["cf-relatedScoreItem", "cf-component", "cf-issueType"].forEach(id => {
+  ["cf-component", "cf-issueType"].forEach(id => {
     document.getElementById(id).value = "";
     document.getElementById(id).closest(".form-group").classList.remove("has-error");
   });
@@ -206,26 +452,38 @@ function clearCaseForm() {
     document.getElementById(id).value = "";
     document.getElementById(id).closest(".form-group").classList.remove("has-error");
   });
+  // Uncheck all Related Score Item checkboxes and clear error state
+  document.querySelectorAll("input[name='cf-relatedItem']").forEach(cb => { cb.checked = false; });
+  document.getElementById("cf-relatedScoreItems-group").classList.remove("has-error");
 }
 
-/** 案件フォームの入力値を取得する */
 function getCaseFormData() {
+  const relatedItems = getCheckedRelatedItems();
   return {
-    relatedScoreItem: document.getElementById("cf-relatedScoreItem").value,
-    component:        document.getElementById("cf-component").value,
-    issueType:        document.getElementById("cf-issueType").value,
-    issue:            document.getElementById("cf-issue").value.trim(),
-    impact:           document.getElementById("cf-impact").value.trim(),
-    response:         document.getElementById("cf-response").value.trim(),
-    request:          document.getElementById("cf-request").value.trim(),
+    relatedScoreItem:     relatedItems[0] || "",
+    additionalScoreItems: relatedItems.slice(1),
+    component:            document.getElementById("cf-component").value,
+    issueType:            document.getElementById("cf-issueType").value,
+    issue:                document.getElementById("cf-issue").value.trim(),
+    impact:               document.getElementById("cf-impact").value.trim(),
+    response:             document.getElementById("cf-response").value.trim(),
+    request:              document.getElementById("cf-request").value.trim(),
   };
 }
 
-/** 案件フォームのバリデーションを行い、成否を返す */
 function validateCaseForm(data) {
   let valid = true;
+
+  // Validate Related Score Item checkbox group (at least one must be selected)
+  const relatedGroup = document.getElementById("cf-relatedScoreItems-group");
+  if (!data.relatedScoreItem) {
+    relatedGroup.classList.add("has-error");
+    valid = false;
+  } else {
+    relatedGroup.classList.remove("has-error");
+  }
+
   const required = [
-    { id: "cf-relatedScoreItem", value: data.relatedScoreItem },
     { id: "cf-component",        value: data.component },
     { id: "cf-issueType",        value: data.issueType },
     { id: "cf-issue",            value: data.issue },
@@ -244,11 +502,10 @@ function validateCaseForm(data) {
   return valid;
 }
 
-/** 案件を追加または更新する */
 function saveCase() {
   const data = getCaseFormData();
   if (!validateCaseForm(data)) {
-    showToast("⚠ 必須項目を入力してください");
+    showToast(t("errRequiredFields"));
     return;
   }
 
@@ -256,14 +513,14 @@ function saveCase() {
     const c = state.cases.find(x => x.id === state.editingCaseId);
     if (c) Object.assign(c, data);
     state.editingCaseId = null;
-    document.getElementById("case-form-title").textContent = "新規案件登録";
-    document.getElementById("btn-case-save").textContent   = "＋ 案件を追加";
+    document.getElementById("case-form-title").textContent = t("newCaseTitle");
+    document.getElementById("btn-case-save").textContent   = t("btnAddCase");
     document.getElementById("btn-case-cancel").style.display = "none";
-    showToast("案件を更新しました");
+    showToast(t("toastCaseUpdated"));
   } else {
     const caseNo = state.nextCaseNo++;
     state.cases.push({ id: caseNo, ...data });
-    showToast(`CASE-${formatCaseId(caseNo)} を追加しました`);
+    showToast(tf("toastCaseAdded", formatCaseId(caseNo)));
   }
 
   clearCaseForm();
@@ -271,52 +528,53 @@ function saveCase() {
   refreshCaseTags();
 }
 
-/** 案件を編集モードにする */
 function editCase(id) {
   const c = state.cases.find(x => x.id === id);
   if (!c) return;
   state.editingCaseId = id;
 
-  document.getElementById("cf-relatedScoreItem").value = c.relatedScoreItem;
-  document.getElementById("cf-component").value        = c.component;
-  document.getElementById("cf-issueType").value        = c.issueType;
-  document.getElementById("cf-issue").value            = c.issue;
-  document.getElementById("cf-impact").value           = c.impact;
-  document.getElementById("cf-response").value         = c.response;
-  document.getElementById("cf-request").value          = c.request;
+  // Pre-check all related score item checkboxes for this case
+  const allRelated = [c.relatedScoreItem, ...(c.additionalScoreItems || [])];
+  document.querySelectorAll("input[name='cf-relatedItem']").forEach(cb => {
+    cb.checked = allRelated.includes(cb.value);
+  });
 
-  document.getElementById("case-form-title").textContent  = `CASE-${formatCaseId(c.id)} を編集`;
-  document.getElementById("btn-case-save").textContent    = "💾 保存";
+  document.getElementById("cf-component").value = c.component;
+  document.getElementById("cf-issueType").value  = c.issueType;
+  document.getElementById("cf-issue").value      = c.issue;
+  document.getElementById("cf-impact").value     = c.impact;
+  document.getElementById("cf-response").value   = c.response;
+  document.getElementById("cf-request").value    = c.request;
+
+  document.getElementById("case-form-title").textContent  = `CASE-${formatCaseId(c.id)} ${t("editCaseSuffix")}`;
+  document.getElementById("btn-case-save").textContent    = t("btnSaveCase");
   document.getElementById("btn-case-cancel").style.display = "";
 
   document.querySelector(".case-form").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
-/** 編集をキャンセルする */
 function cancelEdit() {
   state.editingCaseId = null;
   clearCaseForm();
-  document.getElementById("case-form-title").textContent  = "新規案件登録";
-  document.getElementById("btn-case-save").textContent    = "＋ 案件を追加";
+  document.getElementById("case-form-title").textContent  = t("newCaseTitle");
+  document.getElementById("btn-case-save").textContent    = t("btnAddCase");
   document.getElementById("btn-case-cancel").style.display = "none";
 }
 
-/** 案件を削除する */
 function removeCase(id) {
-  if (!confirm("この案件を削除しますか？")) return;
+  if (!confirm(t("confirmDelete"))) return;
   state.cases = state.cases.filter(c => c.id !== id);
   if (state.editingCaseId === id) cancelEdit();
   renderCaseList();
   refreshCaseTags();
-  showToast("案件を削除しました");
+  showToast(t("toastCaseDeleted"));
 }
 
-/** 案件一覧を描画する */
 function renderCaseList() {
   const container = document.getElementById("cases-list");
 
   if (state.cases.length === 0) {
-    container.innerHTML = `<p style="color:var(--muted);font-size:13px;padding:12px 0;">案件はまだ登録されていません。</p>`;
+    container.innerHTML = `<p style="color:var(--muted);font-size:13px;padding:12px 0;">${escHtml(t("caseListEmpty"))}</p>`;
     return;
   }
 
@@ -325,15 +583,16 @@ function renderCaseList() {
   table.innerHTML = `
     <thead>
       <tr>
-        <th>Case ID</th>
-        <th>Related Score Item</th>
-        <th>Component</th>
-        <th>Issue Type</th>
-        <th>Issue</th>
-        <th>Impact</th>
-        <th>Response</th>
-        <th>Request</th>
-        <th>操作</th>
+        <th>${escHtml(t("colCaseId"))}</th>
+        <th>${escHtml(t("colRelated"))}</th>
+        <th>${escHtml(t("colAdditional"))}</th>
+        <th>${escHtml(t("colComponent"))}</th>
+        <th>${escHtml(t("colIssueType"))}</th>
+        <th>${escHtml(t("colIssue"))}</th>
+        <th>${escHtml(t("colImpact"))}</th>
+        <th>${escHtml(t("colResponse"))}</th>
+        <th>${escHtml(t("colRequest"))}</th>
+        <th>${escHtml(t("colActions"))}</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -341,10 +600,15 @@ function renderCaseList() {
 
   const tbody = table.querySelector("tbody");
   state.cases.forEach(c => {
+    const additionalLabels = (c.additionalScoreItems || [])
+      .map(key => getItemLabel(key))
+      .join(", ");
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><strong>CASE-${formatCaseId(c.id)}</strong></td>
-      <td>${escHtml(SCORE_ITEM_LABELS[c.relatedScoreItem] || c.relatedScoreItem)}</td>
+      <td>${escHtml(getItemLabel(c.relatedScoreItem))}</td>
+      <td class="cell-wrap">${escHtml(additionalLabels)}</td>
       <td>${escHtml(c.component)}</td>
       <td>${escHtml(c.issueType)}</td>
       <td class="cell-wrap">${escHtml(c.issue)}</td>
@@ -352,8 +616,8 @@ function renderCaseList() {
       <td class="cell-wrap">${escHtml(c.response)}</td>
       <td class="cell-wrap">${escHtml(c.request)}</td>
       <td class="cell-actions">
-        <button class="btn btn-outline btn-sm" onclick="editCase(${c.id})">✏ 編集</button>
-        <button class="btn btn-danger btn-sm" onclick="removeCase(${c.id})">✕ 削除</button>
+        <button class="btn btn-outline btn-sm" onclick="editCase(${c.id})">${escHtml(t("btnEditCase"))}</button>
+        <button class="btn btn-danger btn-sm" onclick="removeCase(${c.id})">${escHtml(t("btnDeleteCase"))}</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -369,7 +633,7 @@ function renderCaseList() {
 function incrementRevision() {
   state.revision++;
   document.getElementById("revision").value = state.revision;
-  showToast(`リビジョンを R${state.revision} に更新しました`);
+  showToast(tf("toastRevision", state.revision));
 }
 
 /* ============================================================
@@ -378,40 +642,40 @@ function incrementRevision() {
 function validate(showAlert = false) {
   const errors = [];
 
-  // Service Center
   const sc = document.getElementById("serviceCenter").value;
   if (!sc) {
-    errors.push("Service Center を選択してください。");
+    errors.push(t("errServiceCenter"));
     document.getElementById("serviceCenter").closest(".form-group").classList.add("has-error");
   } else {
     document.getElementById("serviceCenter").closest(".form-group").classList.remove("has-error");
   }
 
-  // Overall Evaluation（7項目すべて必須、5以外は根拠案件1件以上）
   EVAL_ITEMS.forEach(item => {
     const score = getScore(item.key);
     const row   = document.getElementById(`eval-row-${item.key}`);
     if (score === null) {
-      errors.push(`${item.no}「${item.label}」のスコアを選択してください。`);
+      errors.push(`${item.no}「${item[currentLang] || item.en}」${t("errScoreUnselected")}`);
       if (row) row.classList.add("has-error-row");
     } else {
       if (row) row.classList.remove("has-error-row");
       if (score !== 5) {
-        const linked = state.cases.filter(c => c.relatedScoreItem === item.key);
+        const linked = state.cases.filter(c =>
+          c.relatedScoreItem === item.key ||
+          (c.additionalScoreItems && c.additionalScoreItems.includes(item.key))
+        );
         if (linked.length === 0) {
           errors.push(
-            `${item.no}「${item.label}」が${score}点のため、根拠案件を1件以上登録してください。`
+            `${item.no}「${item[currentLang] || item.en}」${tf("errScoreNoCase", score)}`
           );
         }
       }
     }
   });
 
-  // エラー表示
   const alertEl   = document.getElementById("validation-alert");
   const alertList = document.getElementById("validation-errors");
   if (errors.length > 0) {
-    alertList.innerHTML = errors.map(e => `<li>${e}</li>`).join("");
+    alertList.innerHTML = errors.map(e => `<li>${escHtml(e)}</li>`).join("");
     alertEl.classList.add("show");
     if (showAlert) alertEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
   } else {
@@ -436,12 +700,15 @@ function buildJSON() {
     const obj = {
       caseId:           formatCaseId(c.id),
       relatedScoreItem: c.relatedScoreItem,
-      component:        c.component,
-      issueType:        c.issueType,
-      issue:            c.issue,
-      impact:           c.impact,
-      response:         c.response,
     };
+    if (c.additionalScoreItems && c.additionalScoreItems.length > 0) {
+      obj.additionalScoreItems = c.additionalScoreItems;
+    }
+    obj.component  = c.component;
+    obj.issueType  = c.issueType;
+    obj.issue      = c.issue;
+    obj.impact     = c.impact;
+    obj.response   = c.response;
     if (c.request) obj.request = c.request;
     return obj;
   });
@@ -457,7 +724,6 @@ function buildJSON() {
   };
 }
 
-/** JSON を生成してプレビューエリアに表示する */
 function generateJSON() {
   const data    = buildJSON();
   const jsonStr = JSON.stringify(data, null, 2);
@@ -465,24 +731,22 @@ function generateJSON() {
   document.getElementById("json-preview").value = jsonStr;
   wrapper.style.display = "";
   wrapper.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  showToast("JSON を生成しました");
+  showToast(t("toastJsonGenerated"));
 }
 
-/** JSON をクリップボードにコピーする */
 function copyJSON() {
   const text = document.getElementById("json-preview").value;
-  if (!text) { showToast("先に JSON を生成してください"); return; }
+  if (!text) { showToast(t("toastNeedJson")); return; }
   navigator.clipboard.writeText(text).then(() => {
-    showToast("クリップボードにコピーしました");
+    showToast(t("toastCopied"));
   }).catch(() => {
-    showToast("コピーに失敗しました");
+    showToast(t("toastCopyFailed"));
   });
 }
 
-/** JSON をファイルとしてダウンロードする */
 function downloadJSON() {
   const text = document.getElementById("json-preview").value;
-  if (!text) { showToast("先に JSON を生成してください"); return; }
+  if (!text) { showToast(t("toastNeedJson")); return; }
   const blob = new Blob([text], { type: "application/json" });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement("a");
@@ -490,7 +754,7 @@ function downloadJSON() {
   a.download = `nc-csat_${state.surveyId.replace(/[^0-9A-Za-z\-]/g, "_")}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  showToast("JSON をダウンロードしました");
+  showToast(t("toastDownloaded"));
 }
 
 /* ============================================================
@@ -509,13 +773,13 @@ function sendMail() {
     `&body=${encodeURIComponent(bodyText)}`;
 
   if (mailto.length > FIXED.MAILTO_MAX_LEN) {
-    showToast("⚠️ データが大きいため、JSON をダウンロードしてメール添付をご検討ください", 6000);
+    showToast(t("toastDataTooLarge"), 6000);
     generateJSON();
     return;
   }
 
   window.location.href = mailto;
-  showToast("📧 メーラーを起動しています…");
+  showToast(t("toastMailLaunching"));
 }
 
 /* ============================================================
