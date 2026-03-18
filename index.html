@@ -208,6 +208,38 @@
 
     .eval-table tbody tr.has-error-row { background: #fdf3f2; }
 
+    /* Scoring scale reference table */
+    .score-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 12px;
+      font-size: 13px;
+    }
+
+    .score-table th,
+    .score-table td {
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      vertical-align: middle;
+    }
+
+    .score-table thead th {
+      background: #f4f4f4;
+      font-weight: 700;
+    }
+
+    .score-table th:first-child,
+    .score-table td:first-child {
+      width: 10%;
+      text-align: center;
+    }
+
+    .score-table th:last-child,
+    .score-table td:last-child {
+      width: 90%;
+      text-align: left;
+    }
+
     /* Score select */
     .score-select {
       width: auto;
@@ -588,6 +620,43 @@
       <p style="padding:12px 18px 4px;font-size:13px;color:var(--muted);" data-i18n="scoreTip">
         ①～⑦の総合評価を入力してください。5点以外の項目については、下段に根拠案件の登録が必要です。
       </p>
+      <p style="padding:4px 18px 4px;font-size:13px;color:var(--muted);" data-i18n="scoreTip2">
+        以下は5点を満点とした評価スケールです：
+      </p>
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th data-i18n="thScaleScore">スコア</th>
+            <th data-i18n="thScaleDesc">スコア説明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-i18n="scale0">0点</td>
+            <td data-i18n="scale0desc">とても不満：期待を大きく下回り、全く満足できない。</td>
+          </tr>
+          <tr>
+            <td data-i18n="scale1">1点</td>
+            <td data-i18n="scale1desc">不満が多い：対応が悪く、改善が必要。</td>
+          </tr>
+          <tr>
+            <td data-i18n="scale2">2点</td>
+            <td data-i18n="scale2desc">やや不満：最低限の内容だが、問題がいくつかある。</td>
+          </tr>
+          <tr>
+            <td data-i18n="scale3">3点</td>
+            <td data-i18n="scale3desc">普通：期待通りではあるが、特に印象的ではない。</td>
+          </tr>
+          <tr>
+            <td data-i18n="scale4">4点</td>
+            <td data-i18n="scale4desc">満足している：期待通り以上で、大きな不満なし。</td>
+          </tr>
+          <tr>
+            <td data-i18n="scale5">5点</td>
+            <td data-i18n="scale5desc">とても満足：期待を大きく超える素晴らしい体験。</td>
+          </tr>
+        </tbody>
+      </table>
       <table class="eval-table" aria-label="評価入力テーブル">
         <thead>
           <tr>
@@ -778,6 +847,21 @@ const T = {
     sectionEval:            "Overall Evaluation",
     sectionCases:           "Case Registration / Case List",
     scoreTip:               "①～⑦の総合評価を入力してください。5点以外の項目については、下段に根拠案件の登録が必要です。",
+    scoreTip2:              "以下は5点を満点とした評価スケールです：",
+    thScaleScore:           "スコア",
+    thScaleDesc:            "スコア説明",
+    scale0:                 "0点",
+    scale0desc:             "とても不満：期待を大きく下回り、全く満足できない。",
+    scale1:                 "1点",
+    scale1desc:             "不満が多い：対応が悪く、改善が必要。",
+    scale2:                 "2点",
+    scale2desc:             "やや不満：最低限の内容だが、問題がいくつかある。",
+    scale3:                 "3点",
+    scale3desc:             "普通：期待通りではあるが、特に印象的ではない。",
+    scale4:                 "4点",
+    scale4desc:             "満足している：期待通り以上で、大きな不満なし。",
+    scale5:                 "5点",
+    scale5desc:             "とても満足：期待を大きく超える素晴らしい体験。",
     thNo:                   "No",
     thScoreItem:            "評価項目",
     thScore:                "スコア",
@@ -857,6 +941,21 @@ const T = {
     sectionEval:            "Overall Evaluation",
     sectionCases:           "Case Registration / Case List",
     scoreTip:               "Enter overall scores for ①–⑦. For items other than 5, at least one evidence case must be registered below.",
+    scoreTip2:              "The following is the evaluation scale with a maximum of 5 points:",
+    thScaleScore:           "Score",
+    thScaleDesc:            "Description",
+    scale0:                 "0 pts",
+    scale0desc:             "Very Dissatisfied: Far below expectations; completely unsatisfactory.",
+    scale1:                 "1 pt",
+    scale1desc:             "Dissatisfied: Poor experience; significant improvement needed.",
+    scale2:                 "2 pts",
+    scale2desc:             "Somewhat Dissatisfied: Barely meets minimum standards; several issues remain.",
+    scale3:                 "3 pts",
+    scale3desc:             "Neutral: Meets expectations but nothing particularly impressive.",
+    scale4:                 "4 pts",
+    scale4desc:             "Satisfied: Exceeds expectations; no major complaints.",
+    scale5:                 "5 pts",
+    scale5desc:             "Very Satisfied: Far exceeds expectations; an outstanding experience.",
     thNo:                   "No",
     thScoreItem:            "Eval Item",
     thScore:                "Score",
