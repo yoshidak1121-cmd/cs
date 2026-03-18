@@ -165,6 +165,12 @@
       box-shadow: 0 0 0 3px rgba(232,76,61,.15);
     }
 
+    .form-group.has-error .checkbox-group {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 5px;
+    }
+
     .form-group .error-msg {
       font-size: 11px;
       color: var(--accent);
@@ -610,23 +616,13 @@
         <div class="case-form-title" id="case-form-title" data-i18n="newCaseTitle">新規案件登録</div>
         <div class="form-grid case-form-grid">
 
-          <div class="form-group">
-            <label for="cf-relatedScoreItem">
+          <div class="form-group" id="cf-relatedScoreItems-group" style="grid-column: 1 / -1;">
+            <label>
               <span data-i18n="labelRelatedScoreItem">Related Score Item</span>
               <span style="color:var(--accent)"> *</span>
             </label>
-            <select id="cf-relatedScoreItem">
-              <!-- JS で動的生成 -->
-            </select>
+            <div class="checkbox-group" id="cf-relatedScoreItems-checkboxes"></div>
             <span class="error-msg" data-i18n="errRelatedScoreItemMsg">Related Score Item を選択してください</span>
-          </div>
-
-          <!-- ① or ② 選択時に表示される追加関連評価項目（複数選択） -->
-          <div class="form-group" id="cf-subItems-group" style="display:none; grid-column: 1 / -1;">
-            <label>
-              <span data-i18n="labelAdditionalItems">追加関連評価項目（複数選択可）</span>
-            </label>
-            <div class="checkbox-group" id="cf-subItems-checkboxes"></div>
           </div>
 
           <div class="form-group">
@@ -963,8 +959,7 @@ function applyLang() {
   document.getElementById("btn-lang").textContent = t("langBtn");
 
   // Dynamic selects / checkboxes
-  populateRelatedScoreItemSelect();
-  updateSubItemsVisibility();
+  populateRelatedScoreItemCheckboxes();
 
   // Re-render dynamic tables (preserving scores / cases)
   renderEvalTable();
@@ -998,25 +993,6 @@ const EVAL_ITEMS = [
   { key: "customerHandlingScore",  ja: "顧客応対",           en: "Customer Handling",   no: "⑦" },
 ];
 
-/**
- * Sub-items available for additional multi-select when:
- *  ① (productQualityScore) → ③④⑤⑥⑦
- *  ② (generalDefectScore)  → ⑤⑥⑦
- */
-const SUB_ITEMS_MAP = {
-  productQualityScore: [
-    "initialResponseScore",
-    "correctiveActionScore",
-    "analysisSpeedScore",
-    "analysisQualityScore",
-    "customerHandlingScore",
-  ],
-  generalDefectScore: [
-    "analysisSpeedScore",
-    "analysisQualityScore",
-    "customerHandlingScore",
-  ],
-};
 
 /* ============================================================
    状態
@@ -1090,10 +1066,9 @@ function init() {
   document.getElementById("fiscalHalf").value = FIXED.FISCAL_HALF;
   document.getElementById("revision").value   = state.revision;
 
-  populateRelatedScoreItemSelect();
+  populateRelatedScoreItemCheckboxes();
   renderEvalTable();
 
-  document.getElementById("cf-relatedScoreItem").addEventListener("change", updateSubItemsVisibility);
   document.getElementById("btn-revision-up").addEventListener("click", incrementRevision);
   document.getElementById("btn-case-save").addEventListener("click", saveCase);
   document.getElementById("btn-case-cancel").addEventListener("click", cancelEdit);
@@ -1105,51 +1080,22 @@ function init() {
 }
 
 /* ============================================================
-   Related Score Item セレクト（言語対応）
+   Related Score Item チェックボックス（言語対応）
    ============================================================ */
-function populateRelatedScoreItemSelect() {
-  const sel = document.getElementById("cf-relatedScoreItem");
-  const saved = sel.value;
-  sel.innerHTML = `<option value="">${t("selectPlaceholder")}</option>`;
-  EVAL_ITEMS.forEach(item => {
-    const opt = document.createElement("option");
-    opt.value = item.key;
-    opt.textContent = `${item.no} ${item[currentLang] || item.en}`;
-    sel.appendChild(opt);
-  });
-  sel.value = saved;
+function populateRelatedScoreItemCheckboxes() {
+  const container = document.getElementById("cf-relatedScoreItems-checkboxes");
+  const checked = getCheckedRelatedItems();
+  container.innerHTML = EVAL_ITEMS.map(item => {
+    const label     = `${item.no} ${item[currentLang] || item.en}`;
+    const isChecked = checked.includes(item.key) ? " checked" : "";
+    return `<label class="checkbox-label"><input type="checkbox" name="cf-relatedItem" value="${escHtml(item.key)}"${isChecked}> ${escHtml(label)}</label>`;
+  }).join("");
 }
 
-/* ============================================================
-   Sub-items（追加関連評価項目）表示制御
-   ============================================================ */
-function getCheckedSubItems() {
+function getCheckedRelatedItems() {
   return Array.from(
-    document.querySelectorAll("input[name='cf-subItem']:checked")
+    document.querySelectorAll("input[name='cf-relatedItem']:checked")
   ).map(cb => cb.value);
-}
-
-function updateSubItemsVisibility(preChecked) {
-  const primaryVal  = document.getElementById("cf-relatedScoreItem").value;
-  const wrapper     = document.getElementById("cf-subItems-group");
-  const checkboxDiv = document.getElementById("cf-subItems-checkboxes");
-  const subKeys     = SUB_ITEMS_MAP[primaryVal];
-
-  // Preserve currently checked items (or use explicitly passed array when editing)
-  const checked = Array.isArray(preChecked) ? preChecked : getCheckedSubItems();
-
-  if (subKeys) {
-    checkboxDiv.innerHTML = subKeys.map(key => {
-      const item      = EVAL_ITEMS.find(i => i.key === key);
-      const label     = item ? `${item.no} ${item[currentLang] || item.en}` : key;
-      const isChecked = checked.includes(key) ? " checked" : "";
-      return `<label class="checkbox-label"><input type="checkbox" name="cf-subItem" value="${escHtml(key)}"${isChecked}> ${escHtml(label)}</label>`;
-    }).join("");
-    wrapper.style.display = "";
-  } else {
-    checkboxDiv.innerHTML = "";
-    wrapper.style.display = "none";
-  }
 }
 
 /* ============================================================
@@ -1241,7 +1187,7 @@ function refreshCaseTags() {
    ============================================================ */
 
 function clearCaseForm() {
-  ["cf-relatedScoreItem", "cf-component", "cf-issueType"].forEach(id => {
+  ["cf-component", "cf-issueType"].forEach(id => {
     document.getElementById(id).value = "";
     document.getElementById(id).closest(".form-group").classList.remove("has-error");
   });
@@ -1249,15 +1195,16 @@ function clearCaseForm() {
     document.getElementById(id).value = "";
     document.getElementById(id).closest(".form-group").classList.remove("has-error");
   });
-  // Clear sub-items checkboxes and hide section
-  document.getElementById("cf-subItems-checkboxes").innerHTML = "";
-  document.getElementById("cf-subItems-group").style.display = "none";
+  // Uncheck all Related Score Item checkboxes and clear error state
+  document.querySelectorAll("input[name='cf-relatedItem']").forEach(cb => { cb.checked = false; });
+  document.getElementById("cf-relatedScoreItems-group").classList.remove("has-error");
 }
 
 function getCaseFormData() {
+  const relatedItems = getCheckedRelatedItems();
   return {
-    relatedScoreItem:     document.getElementById("cf-relatedScoreItem").value,
-    additionalScoreItems: getCheckedSubItems(),
+    relatedScoreItem:     relatedItems[0] || "",
+    additionalScoreItems: relatedItems.slice(1),
     component:            document.getElementById("cf-component").value,
     issueType:            document.getElementById("cf-issueType").value,
     issue:                document.getElementById("cf-issue").value.trim(),
@@ -1269,8 +1216,17 @@ function getCaseFormData() {
 
 function validateCaseForm(data) {
   let valid = true;
+
+  // Validate Related Score Item checkbox group (at least one must be selected)
+  const relatedGroup = document.getElementById("cf-relatedScoreItems-group");
+  if (!data.relatedScoreItem) {
+    relatedGroup.classList.add("has-error");
+    valid = false;
+  } else {
+    relatedGroup.classList.remove("has-error");
+  }
+
   const required = [
-    { id: "cf-relatedScoreItem", value: data.relatedScoreItem },
     { id: "cf-component",        value: data.component },
     { id: "cf-issueType",        value: data.issueType },
     { id: "cf-issue",            value: data.issue },
@@ -1320,16 +1276,18 @@ function editCase(id) {
   if (!c) return;
   state.editingCaseId = id;
 
-  document.getElementById("cf-relatedScoreItem").value = c.relatedScoreItem;
-  document.getElementById("cf-component").value        = c.component;
-  document.getElementById("cf-issueType").value        = c.issueType;
-  document.getElementById("cf-issue").value            = c.issue;
-  document.getElementById("cf-impact").value           = c.impact;
-  document.getElementById("cf-response").value         = c.response;
-  document.getElementById("cf-request").value          = c.request;
+  // Pre-check all related score item checkboxes for this case
+  const allRelated = [c.relatedScoreItem, ...(c.additionalScoreItems || [])];
+  document.querySelectorAll("input[name='cf-relatedItem']").forEach(cb => {
+    cb.checked = allRelated.includes(cb.value);
+  });
 
-  // Restore sub-items checkboxes with previously saved selection
-  updateSubItemsVisibility(c.additionalScoreItems || []);
+  document.getElementById("cf-component").value = c.component;
+  document.getElementById("cf-issueType").value  = c.issueType;
+  document.getElementById("cf-issue").value      = c.issue;
+  document.getElementById("cf-impact").value     = c.impact;
+  document.getElementById("cf-response").value   = c.response;
+  document.getElementById("cf-request").value    = c.request;
 
   document.getElementById("case-form-title").textContent  = `CASE-${formatCaseId(c.id)} ${t("editCaseSuffix")}`;
   document.getElementById("btn-case-save").textContent    = t("btnSaveCase");
