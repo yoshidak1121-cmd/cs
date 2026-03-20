@@ -3,37 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script>
-        let currentLang = 'en';
-
-        function init() {
-            applyLang(); // Run applyLang during init()
-        }
-
-        function applyLang() {
-            // Function to apply language-specific texts and placeholders
-        }
-
-        function validate(showAlert) {
-            // Validation logic
-            if (showAlert) {
-                alert('Validation error!'); // Show alert only when showAlert is true
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script defer src="assets/js/app.js"></script>
+    <title>CSAT Page</title>
 </head>
 <body>
-    <div>
-        <button id="languageButton">Change Language</button>
-        <noscript>Please enable JavaScript to view this website properly.</noscript> <!-- Small noscript warning for users with JS disabled -->
+    <header>
+        <h1>CSAT Header</h1>
+    </header>
+    <main>
+        <section>
+            <p>Main content goes here.</p>
+        </section>
+    </main>
+    <div class="toast">
+        Toast message here.
     </div>
-    <script>
-        document.getElementById('languageButton').addEventListener('click', function() {
-            // Click handler code here (previously inline onclick)
-        });
-    </script>
 </body>
 </html>
