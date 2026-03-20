@@ -22,10 +22,24 @@ const FIXED = {
   MAILTO_MAX_LEN:   8000,  // mailto URI の一般的な最大長目安
 };
 
+// NOTE:
+// SCORE_OPTIONS は内部的に「正規化」された数値を保持しているため、表示ラベル用に
+// 元のスコア(5,4.5,4...)へ逆引きできるよう raw とマッピングも持たせる。
+const SCORE_RAW = [5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1];
+
 const SCORE_OPTIONS = (() => {
-  const raw = [5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1];
+  const raw = SCORE_RAW;
   const avg = raw.length ? raw.reduce((s, v) => s + v, 0) / raw.length : 1;
   return raw.map(v => parseFloat((v / avg).toFixed(4)));
+})();
+
+// 正規化スコア値 -> 元スコア(5,4.5,...) の逆引きテーブル
+const SCORE_OPTION_TO_RAW = (() => {
+  const map = {};
+  for (let i = 0; i < SCORE_OPTIONS.length; i++) {
+    map[String(SCORE_OPTIONS[i])] = SCORE_RAW[i];
+  }
+  return map;
 })();
 
 const EVAL_ITEMS = [
@@ -37,6 +51,58 @@ const EVAL_ITEMS = [
   { key: "analysisQualityScore",   label: "調査報告の質",       no: "⑥" },
   { key: "customerHandlingScore",  label: "顧客応対",           no: "⑦" },
 ];
+
+const SCORE_COMMENTS = {
+  productQualityScore: {
+    5: "不具合はほとんど発生せず、お客様への影響はない。",
+    4: "不具合は稀に発生しているものの、お客様に影響を及ぼす程度はほとんどない。",
+    3: "不具合は時々発生しているものの、お客様に影響を及ぼす程度は大きくない。",
+    2: "不具合は時々発生しており、お客様に影響を及ぼす不具合があり、改善が必要である。",
+    1: "不具合は頻繁に発生しており、お客様に影響を及ぼす程度は小さくなく、緊急改善が必要である。",
+  },
+  generalDefectScore: {
+    5: "不具合はほとんど発生せず、お客様への影響はない。",
+    4: "不具合は稀に発生しているものの、クレームは発生していない。",
+    3: "不具合は時々発生しているものの、クレームとなるケースは多くない。",
+    2: "不具合は多く発生しており、クレームとなるケースが多い。",
+    1: "不具合は頻繁に発生しており、お客様に影響を及ぼす程度は小さくない。",
+  },
+  initialResponseScore: {
+    5: "対応は迅速かつ適切に実施され、お客様への影響はない。",
+    4: "対応は実施されているものの、迅速性は十分ではない。",
+    3: "対応は実施されているものの、万全ではない。",
+    2: "対応は実施されており、レスポンスは良くない。",
+    1: "対応は実施されており、レスポンスは非常に良くない。",
+  },
+  correctiveActionScore: {
+    5: "処置は適切に実施され、不具合によるお客様への影響はない。",
+    4: "処置はほぼ適切に実施されているものの、不具合によるお客様への影響は大きくない。",
+    3: "処置は実施されているものの、万全ではない。",
+    2: "処置は実施されており、適切でない場合がある。",
+    1: "処置は実施されているものの、適切ではなく、お客様への影響は小さくない。",
+  },
+  analysisSpeedScore: {
+    5: "報告は期限内に実施され、お客様への影響はない。",
+    4: "報告は実施されているものの、期限遵守は十分ではない。",
+    3: "報告は実施されているものの、万全ではない。",
+    2: "報告は実施されており、期限を守れない場合が多い。",
+    1: "報告は実施されているものの、期限をほとんど守れていない。",
+  },
+  analysisQualityScore: {
+    5: "内容は適切であり、不具合解析力は優れており、お客様への影響はない。",
+    4: "内容は適切であるものの、不具合解析力は十分ではない。",
+    3: "内容は一定水準であるものの、万全ではない。",
+    2: "内容は不十分であり、お客様の納得が得られていない場合が多い。",
+    1: "内容は適切ではなく、不具合解析力も高くなく、お客様への影響は小さくない。",
+  },
+  customerHandlingScore: {
+    5: "対応は適切であり、営業的配慮、マナー、取組姿勢ともに問題はない。",
+    4: "対応は適切であるものの、営業的配慮、マナー、取組姿勢は十分ではない。",
+    3: "対応は実施されているものの、万全ではない。",
+    2: "対応は不十分であり、トラブルが発生する場合がある。",
+    1: "対応は適切ではなく、トラブルが多く、お客様への影響は小さくない。",
+  },
+};
 
 const SCORE_ITEM_LABELS = {
   productQualityScore:   "Product Quality",
@@ -62,6 +128,27 @@ let state = {
 /* ============================================================
    ユーティリティ
    ============================================================ */
+
+/********** スコア表示 **********/
+
+/** 正規化スコア値から元スコア値(5, 4.5, ...)を取得する */
+function getRawScoreFromOptionValue(optionValue) {
+  const raw = SCORE_OPTION_TO_RAW[String(optionValue)];
+  return (raw === undefined) ? null : raw;
+}
+
+/** スコアの option 表示ラベルを生成する（整数のみコメント付与、小数は数字のみ） */
+function makeScoreOptionLabel(scoreItemKey, optionValue) {
+  const raw = getRawScoreFromOptionValue(optionValue);
+  if (raw === null) return String(optionValue);
+
+  // 小数点が付く点数は数字のみでOK
+  if (!Number.isInteger(raw)) return String(raw);
+
+  const comments = SCORE_COMMENTS[scoreItemKey];
+  const c = comments ? comments[raw] : "";
+  return c ? `${raw} : ${c}` : String(raw);
+}
 
 /** タイムスタンプ形式のSurveyIDを生成する */
 function generateSurveyId() {
@@ -142,7 +229,7 @@ function renderEvalTable() {
     tr.id = `eval-row-${item.key}`;
 
     const scoreOptions = SCORE_OPTIONS
-      .map(v => `<option value="${v}">${v}</option>`)
+      .map(v => `<option value="${v}">${escHtml(makeScoreOptionLabel(item.key, v))}</option>`)
       .join("");
 
     tr.innerHTML = `
